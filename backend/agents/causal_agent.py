@@ -3,12 +3,12 @@ Detects cause-effect chains, classifies strength, builds NetworkX graph,
 and serializes to React Flow-compatible format.
 """
 import json
-import re
 import math
 import networkx as nx
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from backend.config import get_llm
+from backend.agents.json_utils import parse_json_object
 from backend.models.schemas import (
     CausalAnalysis, CausalChain, CausalGraph, GraphNode, GraphEdge
 )
@@ -70,12 +70,7 @@ def run_causal_agent(
         "evidence": json.dumps(evidence),
     })
 
-    raw = raw.strip()
-    match = re.search(r'\{.*\}', raw, re.DOTALL)
-    if match:
-        raw = match.group(0)
-
-    data = json.loads(raw)
+    data = parse_json_object(raw)
     chains_raw = data.get("causal_chains", [])
     issues = data.get("issues", [])
 

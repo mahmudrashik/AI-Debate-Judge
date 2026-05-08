@@ -21,22 +21,22 @@ const SAMPLE_DEBATES = [
   },
   {
     icon: '⚡',
-    label: 'Electric Transit',
-    topic: 'Dhaka should transition to electric public transport within 10 years',
-    for_argument: `Dhaka's transition to a fully electric public transport system within a decade is urgently necessary. Dhaka consistently ranks among the world's most polluted cities; the WHO estimates air pollution causes over 80,000 premature deaths annually in Bangladesh, with transport emissions accounting for 30% of Dhaka's particulate matter. Electric buses and trains produce zero direct emissions. The economic case is compelling: electric vehicles have 60-80% lower operating costs than diesel alternatives. Dhaka's existing Metrorail project has already demonstrated that Bangladeshi commuters readily adopt modern electric transit. Crucially, China successfully transitioned Shenzhen's entire 16,000-bus fleet to electric in just 5 years, proving the timeline is achievable.`,
-    against_argument: `The proposal to transition Dhaka's entire public transport to electric within 10 years drastically underestimates the infrastructural complexities involved. Electric vehicles require a robust electricity grid—something Dhaka has historically struggled with, experiencing frequent load-shedding that would render electric buses inoperable during critical commuting hours. The upfront capital cost is enormous; replacing even 5,000 buses at $200,000-$300,000 each would require $1-1.5 billion. Bangladesh's government already faces significant fiscal constraints. The transition would also severely displace hundreds of thousands of workers in the existing CNG, rickshaw, and bus ecosystem with no social safety net available.`,
+    label: 'Against Wins',
+    topic: 'Dhaka should transition to fully electric public transport within 5 years',
+    for_argument: `Dhaka should switch all public transport to electric vehicles within five years because electric buses are cleaner and modern. Other cities have started using electric buses, so Dhaka should do the same quickly. Air pollution is a serious problem, and electric transport would help reduce smoke from diesel buses. The city already has some experience with electric trains through the Metrorail, which shows that people are willing to use modern transport. If the government commits to the change, the city can become greener and more advanced. A fast transition would also show that Bangladesh is serious about climate action and technological progress.`,
+    against_argument: `A five-year full transition to electric public transport in Dhaka is not realistic because the proposal ignores infrastructure, financing, grid capacity, and workforce disruption. Electric buses require reliable charging depots, upgraded distribution lines, spare-parts supply chains, trained mechanics, and route-level energy planning; Dhaka does not currently have those systems at the scale needed for thousands of vehicles. The upfront cost would also be extremely high: even a 5,000-bus replacement program could require more than $1 billion before accounting for charging infrastructure, land acquisition, battery replacement, and maintenance contracts. Bangladesh's power grid still faces peak-load pressure, so adding large overnight bus-charging demand without phased grid upgrades could shift pollution and reliability problems rather than solve them. A more defensible policy is a phased 10- to 15-year transition that starts with high-ridership corridors, depot pilots, grid upgrades, domestic technician training, and targeted subsidies. That approach captures environmental benefits while reducing fiscal risk, service disruption, and harm to workers in the existing bus and CNG transport ecosystem.`,
   },
 ]
 
 const PIPELINE_STEPS = [
-  { icon: '🌐', label: 'Topic Context Agent',     desc: 'Classifying domain & entities' },
-  { icon: '🔍', label: 'Argument Extraction',     desc: 'Parsing claims, reasons & evidence' },
-  { icon: '🔗', label: 'Causal Reasoning Agent',  desc: 'Mapping cause-effect chains' },
-  { icon: '⚠️', label: 'Fallacy Detection',       desc: 'Identifying logical weaknesses' },
-  { icon: '📊', label: 'Evidence Quality Agent',  desc: 'Scoring specificity & credibility' },
-  { icon: '🏆', label: 'Scoring Agent',            desc: 'Evaluating 6 debate dimensions' },
-  { icon: '💡', label: 'Explanation & Improvement',desc: 'Generating insights & winner' },
-  { icon: '✨', label: 'Argument Improvement',    desc: 'AI rewriting weak arguments (on demand)' },
+  { icon: '🌐', label: 'Topic Context Agent',      desc: 'Classifying domain & entities' },
+  { icon: '🔍', label: 'Argument Extraction',      desc: 'Parsing claims, reasons & evidence' },
+  { icon: '🔗', label: 'Causal Reasoning Agent',   desc: 'Mapping cause-effect chains' },
+  { icon: '⚠️', label: 'Fallacy Detection',        desc: 'Identifying logical weaknesses' },
+  { icon: '📊', label: 'Evidence Quality Agent',   desc: 'Scoring specificity & credibility' },
+  { icon: '🏆', label: 'Scoring Agent',             desc: 'Evaluating 6 debate dimensions' },
+  { icon: '💡', label: 'Explanation & Improvement', desc: 'Generating insights & winner' },
+  { icon: '✨', label: 'Argument Improvement',     desc: 'AI rewriting weak arguments (on demand)' },
 ]
 
 export default function InputPage({ onSubmit, onHistoryOpen }) {
@@ -48,28 +48,29 @@ export default function InputPage({ onSubmit, onHistoryOpen }) {
   const [step,       setStep]     = useState(-1)
   const [pct,        setPct]      = useState(0)
   const [backendOk,  setBackendOk]= useState(true)
-  const [provider,   setProvider] = useState('groq')
+  const [provider,   setProvider] = useState('both')
   const [providers,  setProviders]= useState({ groq: true, gemini: false })
 
-  const addToast = useToast();
+  const addToast = useToast()
 
-  // Check backend health on mount
   useEffect(() => {
     axios.get(`${API}/health`, { timeout: 4000 })
       .then((res) => {
         setBackendOk(true)
         const available = res.data?.providers || { groq: true, gemini: Boolean(res.data?.gemini_key_loaded) }
         setProviders(available)
-        setProvider((current) => available[current] ? current : 'groq')
+        setProvider((current) => {
+          if (available.groq && available.gemini) return 'both'
+          if (available[current]) return current
+          return available.groq ? 'groq' : 'gemini'
+        })
       })
       .catch(() => setBackendOk(false))
   }, [])
 
-  // Animate progress during loading
   useEffect(() => {
     if (!loading) return
     let i = 0
-    // We have 7 active agents (Agent 8 is on-demand), so animate steps 0-6
     const STEP_MS = 7000
     const tick = setInterval(() => {
       i++
@@ -112,28 +113,25 @@ export default function InputPage({ onSubmit, onHistoryOpen }) {
         const successful = settled
           .filter(({ status }) => status === 'fulfilled')
           .map(({ value }) => value)
-
         if (successful.length === 0) {
           const messages = settled.map(({ reason }) => reason?.response?.data?.detail || reason?.message).filter(Boolean)
           throw new Error(messages.join(' | ') || 'Both providers failed.')
         }
-
         setPct(98)
         const fullResults = await Promise.all(
           successful.map((res) => axios.get(`${API}/results/${res.data.id}`))
         )
         setPct(100)
         await new Promise(r => setTimeout(r, 400))
-        if (addToast && successful.some((res) => res.data.cached)) addToast('⚡ Retrieved instantly from cache!', 'success');
-        if (addToast && successful.length < 2) addToast('One provider failed; showing the completed result.', 'error');
+        if (addToast && successful.some((res) => res.data.cached)) addToast('⚡ Retrieved instantly from cache!', 'success')
+        if (addToast && successful.length < 2) addToast('One provider failed; showing the completed result.', 'error')
         onSubmit(fullResults.map((res) => res.data))
       } else {
         const res = await axios.post(`${API}/analyze-debate`, {
           topic, for_argument: forArg, against_argument: againstArg, provider
         })
         const { id, cached } = res.data
-        if (cached && addToast) addToast('⚡ Retrieved instantly from cache!', 'success');
-        
+        if (cached && addToast) addToast('⚡ Retrieved instantly from cache!', 'success')
         setPct(98)
         const full = await axios.get(`${API}/results/${id}`)
         setPct(100)
@@ -151,63 +149,76 @@ export default function InputPage({ onSubmit, onHistoryOpen }) {
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'transparent' }}>
 
       {/* ── Header ──────────────────────────────────── */}
       <header style={{
-        padding: '16px 40px',
-        borderBottom: '1px solid var(--border)',
-        background: 'rgba(8,10,18,0.85)',
-        backdropFilter: 'blur(20px)',
+        padding: '0 40px',
+        height: 72,
+        borderBottom: '1px solid rgba(137, 180, 250, 0.22)',
+        background: 'var(--glass)',
+        backdropFilter: 'blur(18px)',
+        boxShadow: 'var(--shadow-glass)',
         display: 'flex', alignItems: 'center', gap: 14,
         position: 'sticky', top: 0, zIndex: 50,
       }}>
+        {/* Logo mark */}
         <div style={{
-          width: 38, height: 38, borderRadius: 10,
-          background: 'linear-gradient(135deg, var(--accent), #A855F7)',
+          width: 40, height: 40, borderRadius: 'var(--r-sm)',
+          background: 'linear-gradient(145deg, var(--mocha-surface0), var(--mocha-mantle))',
+          border: '1px solid rgba(137, 180, 250, 0.28)',
+          boxShadow: '0 10px 24px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(205, 214, 244, 0.08)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: 18, flexShrink: 0,
-          boxShadow: '0 4px 16px rgba(108,99,255,0.5)',
+          color: 'var(--mocha-blue)',
         }}>⚖️</div>
+
         <div>
-          <div style={{ fontSize: 15, fontWeight: 800, letterSpacing: '-0.01em' }}>Causal XAI Debate Judge</div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', letterSpacing: '0.02em' }}>8-Agent Pipeline · Groq LLaMA-3.3-70B · Explainable AI</div>
+          <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--ink)', letterSpacing: 0 }}>
+            DebateLens
+          </div>
+          <div style={{ fontSize: 11, color: 'var(--ash)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 7 }}>
+            <span>8-agent causal analysis</span>
+            <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'var(--mocha-overlay0)' }} />
+            <span>Groq + Gemini</span>
+          </div>
         </div>
+
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center' }}>
-          <span className="badge badge-accent">8 Agents</span>
-          <span className="badge badge-success">Groq Free</span>
-          {/* Backend status indicator */}
-          <span
-            className="badge"
-            style={{
-              background: backendOk ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
-              color: backendOk ? 'var(--success)' : 'var(--danger)',
-              border: `1px solid ${backendOk ? 'rgba(16,185,129,0.25)' : 'rgba(239,68,68,0.25)'}`,
-            }}
-          >
-            {backendOk ? '🟢 Backend Online' : '🔴 Backend Offline'}
+          {/* Backend status */}
+          <span className="badge" style={{
+            background: backendOk ? 'var(--success-tint)' : 'var(--danger-tint)',
+            color: backendOk ? 'var(--success)' : 'var(--danger)',
+            border: `1px solid ${backendOk ? 'var(--success-border)' : 'var(--danger-border)'}`,
+          }}>
+            <span style={{ fontSize: 8 }}>{backendOk ? '●' : '●'}</span>
+            {backendOk ? 'Backend Online' : 'Backend Offline'}
           </span>
-          <button className="btn btn-ghost" style={{ padding: '8px 14px', fontSize: 12 }}
-            onClick={onHistoryOpen}>
-            🕐 History
+
+          <button
+            className="btn btn-ghost"
+            style={{ padding: '8px 16px', fontSize: 13 }}
+            onClick={onHistoryOpen}
+          >
+            History
           </button>
         </div>
       </header>
 
-      {/* ── Backend offline warning ───────────────── */}
+      {/* ── Backend offline warning ─────────────────── */}
       {!backendOk && (
         <div style={{
-          padding: '14px 40px',
-          background: 'rgba(239,68,68,0.08)',
-          borderBottom: '1px solid rgba(239,68,68,0.2)',
+          padding: '12px 40px',
+          background: 'var(--danger-tint)',
+          borderBottom: '1px solid var(--danger-border)',
           display: 'flex', alignItems: 'center', gap: 12,
         }}>
-          <span style={{ fontSize: 18 }}>⚠️</span>
+          <span style={{ fontSize: 16 }}>⚠️</span>
           <div>
-            <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--danger)' }}>Backend server is not reachable</p>
-            <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
+            <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--danger)' }}>Backend server is not reachable</p>
+            <p style={{ fontSize: 12, color: 'var(--ash)', marginTop: 2 }}>
               Start the backend with:{' '}
-              <code style={{ background: 'rgba(255,255,255,0.08)', padding: '2px 6px', borderRadius: 4, fontSize: 11 }}>
+              <code style={{ background: 'var(--soft-cloud)', padding: '2px 8px', borderRadius: 4, fontSize: 11, border: '1px solid var(--hairline)' }}>
                 uvicorn backend.main:app --reload
               </code>
             </p>
@@ -217,54 +228,73 @@ export default function InputPage({ onSubmit, onHistoryOpen }) {
 
       {/* ── Hero ────────────────────────────────────── */}
       <div className="hero-section" style={{
-        textAlign: 'center', padding: '72px 24px 48px',
-        position: 'relative', overflow: 'hidden',
+        textAlign: 'center',
+        padding: '72px 24px 52px',
+        background: 'linear-gradient(180deg, rgba(24, 24, 37, 0.98), rgba(17, 17, 27, 0.96))',
+        borderBottom: '1px solid rgba(137, 180, 250, 0.22)',
       }}>
-        {/* Decorative glow */}
+        {/* Breadcrumb-style label */}
         <div style={{
-          position: 'absolute', top: '50%', left: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: 600, height: 300,
-          background: 'radial-gradient(ellipse, rgba(108,99,255,0.12) 0%, transparent 70%)',
-          pointerEvents: 'none',
-        }} />
-
-        <div className="badge badge-cyan" style={{ marginBottom: 18, fontSize: 10 }}>
-          🇧🇩 Bangladesh Social Issues · English &amp; Bangla
+          display: 'inline-flex', alignItems: 'center', gap: 6,
+          fontSize: 12, color: 'var(--ash)', fontWeight: 500,
+          marginBottom: 24, letterSpacing: 0,
+        }}>
+          <span style={{ color: 'var(--rausch)', fontSize: 10 }}>●</span>
+          Debate analysis for policy, education, and social issues
         </div>
 
         <h1 style={{
-          fontSize: 'clamp(32px, 5vw, 56px)',
-          fontWeight: 900, lineHeight: 1.1, marginBottom: 20,
+          fontSize: 'clamp(36px, 5vw, 60px)',
+          fontWeight: 700,
+          lineHeight: 1.1,
+          marginBottom: 20,
           letterSpacing: '-0.03em',
+          color: 'var(--ink)',
+          textShadow: '0 12px 36px rgba(0, 0, 0, 0.28)',
         }}>
-          <span className="gradient-text">AI-Powered</span>
-          <br />Debate Judge
+          Judge debate arguments<br />
+          <span style={{ color: 'var(--rausch)' }}>with evidence.</span>
         </h1>
 
-        <p style={{ color: 'var(--text-secondary)', fontSize: 16, maxWidth: 560, margin: '0 auto 32px', lineHeight: 1.7 }}>
-          Submit two opposing arguments and our <strong style={{ color: 'var(--accent-light)' }}>8-agent AI pipeline</strong> will
-          analyze causal chains, detect fallacies, score both sides, and declare a winner with
-          full explainability.
+        <p style={{
+          color: 'var(--ash)',
+          fontSize: 16,
+          maxWidth: 520,
+          margin: '0 auto 36px',
+          lineHeight: 1.7,
+          fontWeight: 500,
+        }}>
+          Submit two opposing arguments. The analysis extracts claims, checks causal chains, reviews evidence, scores both sides, and explains the result.
         </p>
 
         {/* Agent pill strip */}
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center', maxWidth: 700, margin: '0 auto' }}>
-          {['🌐 Topic', '🔍 Extract', '🔗 Causal', '⚠️ Fallacy', '📊 Evidence', '🏆 Score', '💡 Explain', '✨ Improve'].map(a => (
-            <span key={a} className="badge badge-accent" style={{ fontSize: 10, padding: '5px 10px' }}>{a}</span>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center', maxWidth: 680, margin: '0 auto' }}>
+          {['Topic', 'Extract', 'Causal', 'Fallacy', 'Evidence', 'Score', 'Explain', 'Improve'].map(a => (
+            <span key={a} className="badge badge-neutral" style={{
+              fontSize: 11,
+              padding: '5px 12px',
+              background: 'rgba(49, 50, 68, 0.54)',
+              borderColor: 'rgba(137, 180, 250, 0.24)',
+              color: 'var(--mocha-subtext1)',
+            }}>{a}</span>
           ))}
         </div>
       </div>
 
-      {/* ── Sample Debates ───────────────────────────── */}
-      <div className="page-padding" style={{ padding: '0 40px 28px', maxWidth: 1120, margin: '0 auto', width: '100%' }}>
-        <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 10, fontWeight: 600, letterSpacing: '0.06em' }}>
-          📌 LOAD A SAMPLE DEBATE
+      {/* ── Sample Debates ─────────────────────────── */}
+      <div className="page-padding" style={{ padding: '24px 40px 0', maxWidth: 1120, margin: '0 auto', width: '100%' }}>
+        <p style={{ fontSize: 12, color: 'var(--ash)', marginBottom: 10, fontWeight: 600 }}>
+          Load a sample debate
         </p>
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {SAMPLE_DEBATES.map((s, i) => (
-            <button key={i} className="btn btn-ghost" style={{ fontSize: 12, padding: '8px 16px' }}
-              onClick={() => loadSample(s)} disabled={loading}>
+            <button
+              key={i}
+              className="btn btn-ghost btn-pill sample-chip"
+              style={{ fontSize: 13, padding: '8px 18px' }}
+              onClick={() => loadSample(s)}
+              disabled={loading}
+            >
               {s.icon} {s.label}
             </button>
           ))}
@@ -272,166 +302,174 @@ export default function InputPage({ onSubmit, onHistoryOpen }) {
       </div>
 
       {/* ── Main Form ───────────────────────────────── */}
-      <div style={{ flex: 1, padding: '0 40px 80px', maxWidth: 1120, margin: '0 auto', width: '100%' }}>
+      <div style={{ flex: 1, padding: '24px 40px 80px', maxWidth: 1120, margin: '0 auto', width: '100%' }}>
         <form onSubmit={handleSubmit}>
 
           {/* Topic field */}
-          <div className="card" style={{ marginBottom: 20, background: 'rgba(108,99,255,0.04)', borderColor: 'var(--border-accent)' }}>
-            <label>🎯 Debate Topic / Motion</label>
-            <input type="text" id="topic-input" value={topic}
+          <div className="card" style={{ marginBottom: 16 }}>
+            <label>Debate Topic / Motion</label>
+            <input
+              type="text"
+              id="topic-input"
+              value={topic}
               onChange={e => setTopic(e.target.value)}
               placeholder="e.g. AI tools should be allowed in university exams in Bangladesh"
-              disabled={loading} />
+              disabled={loading}
+            />
           </div>
 
-
           {/* Provider Selection */}
-          <div className="card" style={{ marginBottom: 20, background: 'rgba(108,99,255,0.04)', borderColor: 'var(--border-accent)', display: 'flex', gap: 20, alignItems: 'center', flexWrap: 'wrap' }}>
-            <label style={{ margin: 0, whiteSpace: 'nowrap', fontWeight: 700 }}>🧠 AI Model:</label>
+          <div className="card" style={{ marginBottom: 16, display: 'flex', gap: 20, alignItems: 'center', flexWrap: 'wrap' }}>
+            <label style={{ margin: 0, whiteSpace: 'nowrap', color: 'var(--ink)', fontWeight: 600 }}>AI Model</label>
             <select
               value={provider}
               onChange={e => setProvider(e.target.value)}
               disabled={loading}
-              style={{ flex: 1, padding: '12px 16px', borderRadius: 'var(--radius)', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-accent)', color: '#fff', fontSize: 14, minWidth: 200 }}
+              style={{ flex: 1, minWidth: 200 }}
             >
-              <option value="groq" style={{background: '#1a1b26'}}>🦙 Groq (LLaMA-3.3-70B)</option>
-              <option value="gemini" disabled={!providers.gemini} style={{background: '#1a1b26'}}>
-                ✨ Google Gemini{providers.gemini ? '' : ' (not configured)'}
+              <option value="groq">🦙 Groq (LLaMA-3.3-70B)</option>
+              <option value="gemini" disabled={!providers.gemini}>
+                ✨ Gemini Model{providers.gemini ? '' : ' (not configured)'}
               </option>
-              <option value="both" disabled={!providers.groq || !providers.gemini} style={{background: '#1a1b26'}}>
+              <option value="both" disabled={!providers.groq || !providers.gemini}>
                 ⚖️ Compare Both{providers.gemini ? '' : ' (Gemini not configured)'}
               </option>
             </select>
           </div>
 
           {/* Arguments grid */}
+          <div className="grid-2col page-padding" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
 
-          <div className="grid-2col page-padding" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
             {/* FOR */}
-            <div className="card" style={{ borderColor: 'rgba(16,185,129,0.25)', background: 'rgba(16,185,129,0.03)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                <label style={{ margin: 0 }}>
-                  <span style={{ color: 'var(--success)', marginRight: 6 }}>✅ FOR</span>
-                  — Supporting Argument
+            <div className="card" style={{ borderLeft: '4px solid var(--success)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <label style={{ margin: 0, color: 'var(--success)', fontWeight: 600 }}>
+                  ✅ FOR — Supporting Argument
                 </label>
-                <span style={{ fontSize: 11, color: wordCount(forArg) < 30 ? 'var(--danger)' : 'var(--text-muted)' }}>
-                  {wordCount(forArg)} words {wordCount(forArg) < 30 && wordCount(forArg) > 0 ? '(min 30)' : ''}
+                <span style={{
+                  fontSize: 11, color: wordCount(forArg) < 30 ? 'var(--danger)' : 'var(--ash)',
+                  fontWeight: 500,
+                }}>
+                  {wordCount(forArg)} words{wordCount(forArg) < 30 && wordCount(forArg) > 0 ? ' · min 30' : ''}
                 </span>
               </div>
-              <textarea id="for-arg" value={forArg}
+              <textarea
+                id="for-arg"
+                value={forArg}
                 onChange={e => setForArg(e.target.value)}
                 placeholder="Enter the argument in favour of the motion..."
-                disabled={loading} style={{ minHeight: 240, borderColor: 'rgba(16,185,129,0.2)' }} />
+                disabled={loading}
+                style={{ minHeight: 240 }}
+              />
             </div>
 
             {/* AGAINST */}
-            <div className="card" style={{ borderColor: 'rgba(239,68,68,0.25)', background: 'rgba(239,68,68,0.03)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                <label style={{ margin: 0 }}>
-                  <span style={{ color: 'var(--danger)', marginRight: 6 }}>❌ AGAINST</span>
-                  — Opposing Argument
+            <div className="card" style={{ borderLeft: '4px solid var(--danger)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <label style={{ margin: 0, color: 'var(--danger)', fontWeight: 600 }}>
+                  ❌ AGAINST — Opposing Argument
                 </label>
-                <span style={{ fontSize: 11, color: wordCount(againstArg) < 30 ? 'var(--danger)' : 'var(--text-muted)' }}>
-                  {wordCount(againstArg)} words {wordCount(againstArg) < 30 && wordCount(againstArg) > 0 ? '(min 30)' : ''}
+                <span style={{
+                  fontSize: 11, color: wordCount(againstArg) < 30 ? 'var(--danger)' : 'var(--ash)',
+                  fontWeight: 500,
+                }}>
+                  {wordCount(againstArg)} words{wordCount(againstArg) < 30 && wordCount(againstArg) > 0 ? ' · min 30' : ''}
                 </span>
               </div>
-              <textarea id="against-arg" value={againstArg}
+              <textarea
+                id="against-arg"
+                value={againstArg}
                 onChange={e => setAgainst(e.target.value)}
                 placeholder="Enter the argument against the motion..."
-                disabled={loading} style={{ minHeight: 240, borderColor: 'rgba(239,68,68,0.2)' }} />
+                disabled={loading}
+                style={{ minHeight: 240 }}
+              />
             </div>
           </div>
 
           {/* Error */}
           {error && (
             <div style={{
-              padding: '14px 18px', borderRadius: 'var(--radius)',
-              background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)',
-              color: 'var(--danger)', marginBottom: 20, fontSize: 14,
+              padding: '14px 18px',
+              borderRadius: 'var(--r-sm)',
+              background: 'var(--danger-tint)',
+              border: '1px solid var(--danger-border)',
+              color: 'var(--danger)',
+              marginBottom: 16,
+              fontSize: 14,
+              fontWeight: 500,
               display: 'flex', alignItems: 'flex-start', gap: 10,
             }}>
-              <span style={{ fontSize: 18, flexShrink: 0 }}>⚠️</span>
+              <span style={{ fontSize: 16, flexShrink: 0 }}>⚠️</span>
               <span>{error}</span>
             </div>
           )}
 
           {/* Loading state */}
           {loading ? (
-            <div className="card" style={{
-              background: 'rgba(108,99,255,0.06)',
-              borderColor: 'var(--border-accent)',
-              padding: '32px 40px',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
-                <div className="spinner" />
-                <div>
-                  <p style={{ fontWeight: 700, fontSize: 15 }}>Running 8-Agent Pipeline</p>
-                  <p style={{ color: 'var(--text-muted)', fontSize: 12, marginTop: 2 }}>
-                    This takes 45–90 seconds — each agent calls the selected AI model
-                  </p>
-                </div>
-                <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
-                  <p style={{ fontSize: 28, fontWeight: 900, color: 'var(--accent-light)', lineHeight: 1 }}>{pct}%</p>
-                  <p style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>complete</p>
-                </div>
-              </div>
-
+            <div className="card" style={{ padding: '32px 40px' }}>
               {/* Progress bar */}
-              <div className="progress-bar" style={{ marginBottom: 24, height: 8 }}>
+              <div className="progress-bar" style={{ marginBottom: 24 }}>
                 <div className="progress-fill" style={{ width: `${pct}%` }} />
               </div>
 
-              {/* Agent checklist */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                {PIPELINE_STEPS.slice(0, 7).map((s, i) => {
-                  const done   = i < step
-                  const active = i === step
-                  return (
-                    <div key={i} style={{
-                      display: 'flex', alignItems: 'center', gap: 10,
-                      padding: '10px 14px', borderRadius: 10,
-                      background: done ? 'rgba(16,185,129,0.08)' : active ? 'rgba(108,99,255,0.1)' : 'rgba(255,255,255,0.02)',
-                      border: `1px solid ${done ? 'rgba(16,185,129,0.2)' : active ? 'rgba(108,99,255,0.3)' : 'var(--border)'}`,
-                      transition: 'all 0.4s ease',
-                    }}>
-                      <span style={{ fontSize: 16, flexShrink: 0 }}>
-                        {done ? '✅' : active ? <span style={{ display: 'inline-block', animation: 'spin 0.8s linear infinite', fontSize: 14 }}>⚙️</span> : '⬜'}
-                      </span>
-                      <div style={{ minWidth: 0 }}>
-                        <p style={{ fontSize: 12, fontWeight: 600, color: done ? 'var(--success)' : active ? 'var(--accent-light)' : 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          {s.icon} {s.label}
-                        </p>
-                        <p style={{ fontSize: 10, color: 'var(--text-muted)' }}>{s.desc}</p>
-                      </div>
-                    </div>
-                  )
-                })}
-                {/* Agent 8 — always "on demand", shown greyed out */}
-                <div style={{
-                  display: 'flex', alignItems: 'center', gap: 10,
-                  padding: '10px 14px', borderRadius: 10,
-                  background: 'rgba(255,255,255,0.02)',
-                  border: '1px dashed var(--border)',
-                  opacity: 0.5,
-                }}>
-                  <span style={{ fontSize: 16, flexShrink: 0 }}>✨</span>
-                  <div>
-                    <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)' }}>✨ Argument Improvement</p>
-                    <p style={{ fontSize: 10, color: 'var(--text-muted)' }}>On-demand after results</p>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 20 }}>
+                <div className="spinner" style={{ flexShrink: 0, marginTop: 4 }} />
+                <div style={{ flex: 1 }}>
+                  <p style={{ fontWeight: 700, fontSize: 16, color: 'var(--ink)', marginBottom: 4 }}>
+                    Running 8-Agent Pipeline
+                    <span style={{ color: 'var(--rausch)', marginLeft: 8 }}>{pct}%</span>
+                  </p>
+                  <p style={{ color: 'var(--ash)', fontSize: 13, marginBottom: 20 }}>
+                    This takes 45–90 seconds — each agent calls the selected AI model
+                  </p>
+
+                  {/* Step list */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {PIPELINE_STEPS.slice(0, 7).map((s, i) => {
+                      const done    = i < step
+                      const current = i === step
+                      return (
+                        <div key={i} style={{
+                          display: 'flex', alignItems: 'center', gap: 12,
+                          opacity: done ? 1 : current ? 1 : 0.4,
+                          transition: 'opacity 0.3s ease',
+                        }}>
+                          <div style={{
+                            width: 28, height: 28, borderRadius: '50%',
+                            background: done ? 'var(--success)' : current ? 'var(--rausch)' : 'var(--mocha-surface1)',
+                            border: `1px solid ${done ? 'transparent' : current ? 'transparent' : 'var(--mocha-surface2)'}`,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: 13, flexShrink: 0,
+                            transition: 'background 0.3s ease',
+                          }}>
+                            {done ? '✓' : s.icon}
+                          </div>
+                          <div>
+                            <div style={{ fontSize: 13, fontWeight: 600, color: current ? 'var(--ink)' : 'var(--ash)' }}>
+                              {s.label}
+                            </div>
+                            <div style={{ fontSize: 11, color: 'var(--mute)', marginTop: 1 }}>{s.desc}</div>
+                          </div>
+                          {current && <div className="spinner-sm" style={{ marginLeft: 'auto' }} />}
+                          {done && <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--success)', fontWeight: 600 }}>Done</span>}
+                        </div>
+                      )
+                    })}
                   </div>
                 </div>
               </div>
             </div>
           ) : (
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 8 }}>
               <button
                 id="analyze-btn"
                 type="submit"
-                className="btn btn-primary"
-                style={{ padding: '16px 56px', fontSize: 16, borderRadius: 14 }}
+                className="btn btn-primary btn-pill"
+                style={{ padding: '16px 56px', fontSize: 16, fontWeight: 600 }}
                 disabled={!backendOk}
               >
-                ⚡ Analyze Debate
+                Analyze Debate →
               </button>
             </div>
           )}

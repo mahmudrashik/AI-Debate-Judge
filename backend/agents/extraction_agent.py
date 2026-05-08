@@ -1,9 +1,8 @@
 """Agent 2: Argument Extraction Agent — extracts claim, reasons, evidence, assumptions, conclusion."""
-import json
-import re
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from backend.config import get_llm
+from backend.agents.json_utils import parse_json_object
 from backend.models.schemas import ArgumentStructure
 
 SYSTEM_PROMPT = """You are an expert argument analyst trained in Toulmin argumentation theory.
@@ -42,12 +41,7 @@ def run_extraction_agent(topic: str, side: str, argument: str, provider: str = "
         "argument": argument,
     })
     
-    raw = raw.strip()
-    match = re.search(r'\{.*\}', raw, re.DOTALL)
-    if match:
-        raw = match.group(0)
-    
-    data = json.loads(raw)
+    data = parse_json_object(raw)
     return ArgumentStructure(
         claim=data.get("claim", ""),
         reasons=data.get("reasons", []),

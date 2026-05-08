@@ -31,7 +31,6 @@ export default function Confetti() {
         left: `${left}%`,
         animationDuration: `${duration}s`,
         animationDelay: `${delay}s`,
-        transform: `rotateZ(${rotate}deg)`,
         borderRadius: Math.random() > 0.5 ? '50%' : '2px',
       })
 

@@ -1,9 +1,9 @@
 import { useState } from 'react'
 
 const PRIORITY_STYLE = {
-  high:   { color: '#EF4444', bg: 'rgba(239,68,68,0.08)',  border: 'rgba(239,68,68,0.2)',  icon: '🔴', label: 'High Priority'   },
-  medium: { color: '#F59E0B', bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.2)', icon: '🟡', label: 'Medium Priority' },
-  low:    { color: '#10B981', bg: 'rgba(16,185,129,0.08)', border: 'rgba(16,185,129,0.2)', icon: '🟢', label: 'Low Priority'    },
+  high:   { color: 'var(--mocha-red)',    bg: 'var(--danger-tint)',  border: 'var(--danger-border)', icon: '🔴', label: 'High Priority'   },
+  medium: { color: 'var(--mocha-yellow)', bg: 'var(--warning-tint)', border: 'rgba(249,226,175,0.2)', icon: '🟡', label: 'Medium Priority' },
+  low:    { color: 'var(--mocha-green)',  bg: 'var(--success-tint)', border: 'var(--success-border)', icon: '🟢', label: 'Low Priority'    },
 }
 
 function ImprovementCard({ imp, index }) {
@@ -14,7 +14,7 @@ function ImprovementCard({ imp, index }) {
   return (
     <div style={{
       padding: '14px 16px', borderRadius: 'var(--radius)',
-      background: p.bg, border: `1px solid ${p.border}`,
+      background: 'var(--mocha-surface0)', border: `1px solid ${p.border}`,
       transition: 'all 0.2s ease',
     }}>
       <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
@@ -23,7 +23,7 @@ function ImprovementCard({ imp, index }) {
           <div style={{ display: 'flex', gap: 8, marginBottom: 8, alignItems: 'center' }}>
             <span style={{
               fontSize: 9, fontWeight: 800, color: p.color,
-              background: `${p.color}18`, padding: '3px 8px',
+              background: 'var(--mocha-surface1)', padding: '3px 8px',
               borderRadius: 99, letterSpacing: '0.08em', textTransform: 'uppercase',
               flexShrink: 0,
             }}>
@@ -58,13 +58,13 @@ export default function ImprovementPanel({ improvements }) {
   const againstItems = improvements.filter(i => i.side === 'AGAINST')
 
   const renderList = (items, side, color) => (
-    <div className="card fade-in-up" style={{ borderColor: `${color}20` }}>
+    <div className="card fade-in-up" style={{ borderColor: 'var(--mocha-surface1)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <h3 style={{ color, fontWeight: 800, fontSize: 15 }}>
           {side === 'FOR' ? '✅ FOR' : '❌ AGAINST'} Improvements
         </h3>
         {items.length > 0 && (
-          <span className="badge" style={{ color, background: `${color}18`, border: `1px solid ${color}30` }}>
+          <span className="badge" style={{ color, background: 'var(--mocha-surface1)', border: '1px solid var(--mocha-surface2)' }}>
             {items.length} suggestion{items.length > 1 ? 's' : ''}
           </span>
         )}
@@ -94,7 +94,6 @@ export default function ImprovementPanel({ improvements }) {
   }
 
   return (
-    /* Use inline grid style instead of class — class requires viewport-aware CSS */
     <div style={{
       display: 'grid',
       gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',

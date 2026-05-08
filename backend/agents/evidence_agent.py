@@ -1,9 +1,9 @@
 """Agent 5: Evidence Quality Agent — evaluates specificity, relevance, credibility, measurability."""
 import json
-import re
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from backend.config import get_llm
+from backend.agents.json_utils import parse_json_object
 from backend.models.schemas import EvidenceQuality
 
 SYSTEM_PROMPT = """You are an evidence quality assessor trained in academic argumentation.
@@ -63,12 +63,7 @@ def run_evidence_agent(
         "evidence": json.dumps(evidence) if evidence else "No explicit evidence cited.",
     })
 
-    raw = raw.strip()
-    match = re.search(r'\{.*\}', raw, re.DOTALL)
-    if match:
-        raw = match.group(0)
-
-    data = json.loads(raw)
+    data = parse_json_object(raw)
     scores = data.get("scores", {})
     return EvidenceQuality(
         quality=data.get("quality", "weak"),

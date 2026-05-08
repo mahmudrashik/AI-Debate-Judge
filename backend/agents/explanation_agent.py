@@ -1,10 +1,10 @@
 """Agent 7: Explanation & Improvement Agent — declares winner, explains reasoning,
 identifies strongest/weakest sentences, suggests improvements, provides counterfactual."""
 import json
-import re
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from backend.config import get_llm
+from backend.agents.json_utils import parse_json_object
 from backend.models.schemas import Explanation, Improvement
 
 SYSTEM_PROMPT = """You are a master debate judge providing a comprehensive, fair, and detailed final judgment.
@@ -105,12 +105,7 @@ def run_explanation_agent(
         "against_evidence_quality": against_evidence_quality,
     })
 
-    raw = raw.strip()
-    match = re.search(r'\{.*\}', raw, re.DOTALL)
-    if match:
-        raw = match.group(0)
-
-    data = json.loads(raw)
+    data = parse_json_object(raw)
     improvements = [
         Improvement(
             side=imp.get("side", "FOR"),

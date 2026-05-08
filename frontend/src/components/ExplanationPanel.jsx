@@ -2,7 +2,6 @@ import { useToast } from './ToastProvider';
 
 export default function ExplanationPanel({ explanation, forScore, againstScore }) {
   const forWins = explanation.winner === 'FOR';
-  
   const addToast = useToast();
 
   const handleCopyVerdict = () => {
@@ -18,15 +17,15 @@ export default function ExplanationPanel({ explanation, forScore, againstScore }
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       {/* Counterfactual */}
       <div className="card" style={{
-        background: 'linear-gradient(135deg, rgba(108,99,255,0.08), rgba(168,85,247,0.05))',
-        borderColor: 'rgba(108,99,255,0.3)',
+        background: 'linear-gradient(135deg, var(--accent-glow), transparent)',
+        borderColor: 'var(--mocha-surface1)',
       }}>
         <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
           <div style={{
             width: 44, height: 44, borderRadius: 12, flexShrink: 0,
-            background: 'linear-gradient(135deg, var(--accent), #A855F7)',
+            background: 'var(--mocha-surface1)',
             display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22,
-            boxShadow: '0 4px 16px rgba(108,99,255,0.4)',
+            border: '1px solid var(--mocha-surface2)',
           }}>🔮</div>
           <div style={{ flex: 1 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
@@ -62,7 +61,7 @@ export default function ExplanationPanel({ explanation, forScore, againstScore }
               <div style={{
                 padding: '10px 14px',
                 borderLeft: '3px solid var(--success)',
-                background: 'rgba(16,185,129,0.05)',
+                background: 'var(--mocha-mantle)',
                 borderRadius: '0 8px 8px 0',
               }}>
                 <p style={{ fontSize: 13, color: 'var(--text-secondary)', fontStyle: 'italic', lineHeight: 1.6 }}>
@@ -79,7 +78,7 @@ export default function ExplanationPanel({ explanation, forScore, againstScore }
               <div style={{
                 padding: '10px 14px',
                 borderLeft: '3px solid var(--danger)',
-                background: 'rgba(239,68,68,0.05)',
+                background: 'var(--mocha-mantle)',
                 borderRadius: '0 8px 8px 0',
               }}>
                 <p style={{ fontSize: 13, color: 'var(--text-secondary)', fontStyle: 'italic', lineHeight: 1.6 }}>
@@ -91,5 +90,5 @@ export default function ExplanationPanel({ explanation, forScore, againstScore }
         ))}
       </div>
     </div>
-  )
+  );
 }

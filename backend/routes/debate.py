@@ -168,7 +168,7 @@ async def health():
     }
     return {
         "status": "ok",
-        "service": "Causal XAI Debate Judge",
+        "service": "DebateLens",
         "agents": 8,
         "model": LLM_MODEL,
         "gemini_model": GEMINI_MODEL,

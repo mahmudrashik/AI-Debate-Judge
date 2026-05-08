@@ -1,9 +1,8 @@
 """Agent 4: Fallacy Detection Agent — identifies logical fallacies in arguments."""
-import json
-import re
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from backend.config import get_llm
+from backend.agents.json_utils import parse_json_array
 from backend.models.schemas import Fallacy
 
 # NOTE: All {{ and }} in the prompt are escaped curly braces (literal { and })
@@ -58,15 +57,7 @@ def run_fallacy_agent(topic: str, side: str, argument: str, provider: str = "gro
         "argument": argument,
     })
 
-    raw = raw.strip()
-    # Handle both [] array and {} object responses
-    match = re.search(r'\[.*\]', raw, re.DOTALL)
-    if match:
-        raw = match.group(0)
-    else:
-        return []
-
-    data = json.loads(raw)
+    data = parse_json_array(raw, wrapper_key="fallacies")
     return [
         Fallacy(
             type=f.get("type", "unknown"),
