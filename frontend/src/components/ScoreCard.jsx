@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 const CRITERIA = [
   { key: 'claim_clarity',     label: 'Claim Clarity',     max: 15, icon: '🎯' },

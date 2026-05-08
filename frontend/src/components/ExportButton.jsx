@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useToast } from './ToastProvider';
 import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 
 export default function ExportButton({ result }) {
   const [exporting, setExporting] = useState(false);
@@ -110,7 +109,7 @@ function generateReportHTML(result) {
       </div>`).join('');
   };
 
-  const causalSection = (causal, color) => {
+  const causalSection = (causal) => {
     let html = '<p style="font-size:12px;font-weight:600;color:#374151;margin-bottom:6px;">Causal Chains:</p>';
     if (causal.causal_chains.length === 0) {
       html += '<p style="color:#9ca3af;font-style:italic;font-size:12px;">No chains identified</p>';

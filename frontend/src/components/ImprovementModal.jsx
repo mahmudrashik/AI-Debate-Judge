@@ -5,13 +5,7 @@
 import { useState } from 'react'
 import axios from 'axios'
 
-const API = 'http://localhost:8000/api'
-
-const PRIORITY_STYLE = {
-  high:   { color: '#EF4444', bg: 'rgba(239,68,68,0.1)',   icon: '🔴', label: 'High' },
-  medium: { color: '#F59E0B', bg: 'rgba(245,158,11,0.1)',  icon: '🟡', label: 'Medium' },
-  low:    { color: '#10B981', bg: 'rgba(16,185,129,0.1)',   icon: '🟢', label: 'Low' },
-}
+const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8005/api'
 
 export default function ImprovementModal({ resultId, side, onClose }) {
   const [loading, setLoading] = useState(false)

@@ -1,4 +1,6 @@
-import urllib.request, json
+import urllib.request, json, os
+
+API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8005/api")
 
 payload = json.dumps({
     "topic": "AI tools should be allowed in university exams in Bangladesh",
@@ -7,7 +9,7 @@ payload = json.dumps({
 }).encode()
 
 req = urllib.request.Request(
-    "http://localhost:8000/api/analyze-debate",
+    f"{API_BASE_URL}/analyze-debate",
     data=payload,
     headers={"Content-Type": "application/json"},
     method="POST"
@@ -17,7 +19,7 @@ data = json.loads(r.read())
 print("Result ID:", data["id"])
 print("Status:", data["status"])
 
-r2 = urllib.request.urlopen("http://localhost:8000/api/results/" + data["id"], timeout=30)
+r2 = urllib.request.urlopen(f"{API_BASE_URL}/results/" + data["id"], timeout=30)
 full = json.loads(r2.read())
 print("Winner:", full["explanation"]["winner"])
 print("FOR score:", full["for_score"]["score"])

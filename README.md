@@ -47,19 +47,24 @@ copy .env.example .env       # Windows
 
 # Start backend (from project root, not inside backend/)
 cd ..
-uvicorn backend.main:app --reload --port 8000
+uvicorn backend.main:app --reload --port 8005
 ```
 
 The API will be available at:
-- **http://localhost:8000** — API root
-- **http://localhost:8000/docs** — Interactive Swagger UI
-- **http://localhost:8000/api/health** — Health check
+- **http://localhost:8005** — API root
+- **http://localhost:8005/docs** — Interactive Swagger UI
+- **http://localhost:8005/api/health** — Health check
 
 ### 2. Frontend Setup
 
 ```bash
 cd frontend
 npm install
+
+# Optional: customize the backend URL for this machine
+copy .env.example .env       # Windows
+# cp .env.example .env       # Linux/Mac
+
 npm run dev
 ```
 
@@ -71,6 +76,8 @@ Frontend will be available at **http://localhost:5173**
 |---|---|---|
 | `GROQ_API_KEY` | Your Groq API key (required) | — |
 | `LLM_MODEL` | Groq model to use | `llama-3.3-70b-versatile` |
+| `GEMINI_API_KEY` | Optional Gemini key for comparison mode | — |
+| `VITE_API_BASE_URL` | Frontend API base URL, set in `frontend/.env` | `http://localhost:8005/api` |
 
 ## 📡 API Endpoints
 
@@ -92,9 +99,34 @@ Frontend will be available at **http://localhost:5173**
 
 ## 🎓 Sample Debates Included
 
-1. **AI in Exams** — Should AI tools be allowed in Bangladeshi university exams?
-2. **Plastic Ban** — Should Bangladesh ban single-use plastics?
-3. **Electric Transit** — Should Dhaka transition to electric public transport?
+Here are some test cases you can copy-paste into the web application to test the full pipeline:
+
+### 1. AI in Exams
+**Topic:** Should AI tools be allowed in Bangladeshi university exams?
+
+**Argument FOR:**
+> AI is a tool just like calculators or search engines were decades ago. Banning it only creates a gap between academia and the real world, where AI is already actively used across every industry. By allowing AI in exams, universities can shift away from testing rote memorization and instead test higher-order thinking skills. Exams can be redesigned to evaluate critical analysis, complex problem-solving, and the student's ability to verify and refine AI-generated answers. Embracing this technology prepares students for the modern workforce rather than holding them back in outdated assessment methods.
+
+**Argument AGAINST:**
+> Allowing AI in university exams fundamentally undermines academic integrity and damages the genuine learning process. It creates an unfair disparity between students who can afford premium AI models and those from lower socioeconomic backgrounds who cannot. Furthermore, if students rely on AI to generate their exam answers, university degrees will lose their credibility in the job market. It will become impossible for employers to distinguish between a student's actual competence and the capabilities of their AI assistant, ultimately devaluing the entire higher education system in Bangladesh.
+
+### 2. Plastic Ban
+**Topic:** Should Bangladesh ban single-use plastics?
+
+**Argument FOR (Weak - Contains Fallacies):**
+> Plastics are bad for the environment and cause pollution everywhere. We need to ban them right now to save the rivers and make our streets cleaner. Many European countries have already banned them, so Bangladesh must do it immediately as well. If we don't ban them today, the entire country will be completely covered in garbage by next year.
+
+**Argument AGAINST (Strong - Well Reasoned):**
+> While environmental concerns are valid, an immediate, total ban on single-use plastics in Bangladesh would cause severe economic disruption. The plastic manufacturing sector employs over a million people, and a sudden ban would lead to massive job losses. Furthermore, affordable alternatives like biodegradable packaging are currently too expensive for the average consumer, which would drive up daily living costs and disproportionately affect low-income families. A phased transition focusing on improving recycling infrastructure and subsidizing eco-friendly alternatives is a much more pragmatic and economically viable approach than an abrupt ban.
+
+### 3. Electric Transit
+**Topic:** Should Dhaka transition to electric public transport?
+
+**Argument FOR (Strong - Well Reasoned):**
+> Transitioning Dhaka's public transport to electric vehicles (EVs) is a public health and environmental imperative. Dhaka consistently ranks among cities with the worst air quality globally, largely due to fossil-fuel vehicular emissions. Electric buses emit zero tailpipe pollutants, which would drastically reduce respiratory diseases among residents. Although the initial infrastructure and vehicle capital costs are high, the long-term operational savings on imported fossil fuels and the significant reduction in national healthcare costs make this transition economically beneficial over a 10-year horizon.
+
+**Argument AGAINST (Weak - Contains Fallacies):**
+> Electric buses are just a trendy Western concept that won't work here. We already have load shedding, so if we plug in buses, the whole city will go dark forever. Besides, current bus drivers will probably lose their jobs because electric buses are too complicated to drive, and everyone knows that massive lithium batteries catch fire all the time, making them a huge public danger.
 
 ## 📁 Project Structure
 
@@ -124,7 +156,9 @@ Project/
 │   │   ├── pages/           # InputPage, ResultsPage
 │   │   ├── App.jsx
 │   │   └── index.css        # Design system
-│   └── package.json
+│   ├── package.json
+│   ├── .env                 # Custom API URL (optional)
+│   └── .env.example         # Template for API URL
 ├── .env                     # Your API key (not committed)
 └── .env.example             # Template
 ```

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import axios from 'axios'
 import { useToast } from '../components/ToastProvider'
 
-const API = 'http://localhost:8000/api'
+const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8005/api'
 
 const SAMPLE_DEBATES = [
   {
@@ -48,20 +48,26 @@ export default function InputPage({ onSubmit, onHistoryOpen }) {
   const [step,       setStep]     = useState(-1)
   const [pct,        setPct]      = useState(0)
   const [backendOk,  setBackendOk]= useState(true)
-  const [provider,   setProvider] = useState('both')
+  const [provider,   setProvider] = useState('groq')
+  const [providers,  setProviders]= useState({ groq: true, gemini: false })
 
   const addToast = useToast();
 
   // Check backend health on mount
   useEffect(() => {
     axios.get(`${API}/health`, { timeout: 4000 })
-      .then(() => setBackendOk(true))
+      .then((res) => {
+        setBackendOk(true)
+        const available = res.data?.providers || { groq: true, gemini: Boolean(res.data?.gemini_key_loaded) }
+        setProviders(available)
+        setProvider((current) => available[current] ? current : 'groq')
+      })
       .catch(() => setBackendOk(false))
   }, [])
 
   // Animate progress during loading
   useEffect(() => {
-    if (!loading) { setStep(-1); setPct(0); return }
+    if (!loading) return
     let i = 0
     // We have 7 active agents (Agent 8 is on-demand), so animate steps 0-6
     const STEP_MS = 7000
@@ -95,21 +101,32 @@ export default function InputPage({ onSubmit, onHistoryOpen }) {
       return
     }
     setLoading(true)
+    setStep(-1)
+    setPct(0)
     setError('')
     try {
       if (provider === 'both') {
         const p1 = axios.post(`${API}/analyze-debate`, { topic, for_argument: forArg, against_argument: againstArg, provider: 'groq' })
         const p2 = axios.post(`${API}/analyze-debate`, { topic, for_argument: forArg, against_argument: againstArg, provider: 'gemini' })
-        const [res1, res2] = await Promise.all([p1, p2])
+        const settled = await Promise.allSettled([p1, p2])
+        const successful = settled
+          .filter(({ status }) => status === 'fulfilled')
+          .map(({ value }) => value)
+
+        if (successful.length === 0) {
+          const messages = settled.map(({ reason }) => reason?.response?.data?.detail || reason?.message).filter(Boolean)
+          throw new Error(messages.join(' | ') || 'Both providers failed.')
+        }
+
         setPct(98)
-        const [full1, full2] = await Promise.all([
-          axios.get(`${API}/results/${res1.data.id}`),
-          axios.get(`${API}/results/${res2.data.id}`)
-        ])
+        const fullResults = await Promise.all(
+          successful.map((res) => axios.get(`${API}/results/${res.data.id}`))
+        )
         setPct(100)
         await new Promise(r => setTimeout(r, 400))
-        if (addToast && (res1.data.cached || res2.data.cached)) addToast('⚡ Retrieved instantly from cache!', 'success');
-        onSubmit([full1.data, full2.data])
+        if (addToast && successful.some((res) => res.data.cached)) addToast('⚡ Retrieved instantly from cache!', 'success');
+        if (addToast && successful.length < 2) addToast('One provider failed; showing the completed result.', 'error');
+        onSubmit(fullResults.map((res) => res.data))
       } else {
         const res = await axios.post(`${API}/analyze-debate`, {
           topic, for_argument: forArg, against_argument: againstArg, provider
@@ -128,6 +145,8 @@ export default function InputPage({ onSubmit, onHistoryOpen }) {
       setError(detail)
     } finally {
       setLoading(false)
+      setStep(-1)
+      setPct(0)
     }
   }
 
@@ -276,8 +295,12 @@ export default function InputPage({ onSubmit, onHistoryOpen }) {
               style={{ flex: 1, padding: '12px 16px', borderRadius: 'var(--radius)', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-accent)', color: '#fff', fontSize: 14, minWidth: 200 }}
             >
               <option value="groq" style={{background: '#1a1b26'}}>🦙 Groq (LLaMA-3.3-70B)</option>
-              <option value="gemini" style={{background: '#1a1b26'}}>✨ Google Gemini (1.5 Pro)</option>
-              <option value="both" style={{background: '#1a1b26'}}>⚖️ Compare Both (Side-by-Side)</option>
+              <option value="gemini" disabled={!providers.gemini} style={{background: '#1a1b26'}}>
+                ✨ Google Gemini{providers.gemini ? '' : ' (not configured)'}
+              </option>
+              <option value="both" disabled={!providers.groq || !providers.gemini} style={{background: '#1a1b26'}}>
+                ⚖️ Compare Both{providers.gemini ? '' : ' (Gemini not configured)'}
+              </option>
             </select>
           </div>
 
@@ -344,7 +367,7 @@ export default function InputPage({ onSubmit, onHistoryOpen }) {
                 <div>
                   <p style={{ fontWeight: 700, fontSize: 15 }}>Running 8-Agent Pipeline</p>
                   <p style={{ color: 'var(--text-muted)', fontSize: 12, marginTop: 2 }}>
-                    This takes 45–90 seconds — each agent calls Groq LLaMA-3.3-70B
+                    This takes 45–90 seconds — each agent calls the selected AI model
                   </p>
                 </div>
                 <div style={{ marginLeft: 'auto', textAlign: 'right' }}>

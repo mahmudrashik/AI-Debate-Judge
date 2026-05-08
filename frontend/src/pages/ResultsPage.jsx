@@ -58,7 +58,6 @@ export default function ResultsPage({ result: resultsArray, onBack }) {
 
   const forWins        = explanation.winner === 'FOR'
   const winnerScore    = forWins ? for_score.score : against_score.score
-  const loserScore     = forWins ? against_score.score : for_score.score
   const totalFallacies = for_fallacies.length + against_fallacies.length
   const totalChains    = for_causal.causal_chains.length + against_causal.causal_chains.length
   const domainIcon     = DOMAIN_ICON[topic_context.domain] || '🌐'

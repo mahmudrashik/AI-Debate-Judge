@@ -4,8 +4,17 @@ from dotenv import load_dotenv
 
 env_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env')
 load_dotenv(dotenv_path=env_path, override=True)
-GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
-GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
+
+
+def _read_secret(name: str) -> str:
+    value = os.getenv(name, "").strip()
+    if not value or value.startswith("YOUR_"):
+        return ""
+    return value
+
+
+GROQ_API_KEY: str = _read_secret("GROQ_API_KEY")
+GEMINI_API_KEY: str = _read_secret("GEMINI_API_KEY")
 LLM_MODEL: str    = os.getenv("LLM_MODEL", "llama-3.1-8b-instant")
 GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-flash-latest")
 

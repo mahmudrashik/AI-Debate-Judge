@@ -2,7 +2,6 @@ import { useToast } from './ToastProvider';
 
 export default function ExplanationPanel({ explanation, forScore, againstScore }) {
   const forWins = explanation.winner === 'FOR';
-  const winnerColor = forWins ? 'var(--success)' : 'var(--danger)';
   
   const addToast = useToast();
 
