@@ -124,7 +124,7 @@ The web UI includes exactly three sample debates. They are useful for checking d
 **Argument AGAINST:**
 > A complete ban on single-use plastics in Bangladesh would create severe economic and social disruptions the country is not equipped to handle. Bangladesh's small-scale plastic manufacturing sector employs approximately 2 million workers, predominantly from low-income backgrounds. An abrupt ban without adequate transition and economic safety nets would result in mass unemployment. The practical alternatives—biodegradable packaging, jute, glass—are 3 to 5 times more expensive, inaccessible to most Bangladeshi consumers. Furthermore, the cold chain and food safety infrastructure relies heavily on plastic packaging to prevent contamination. The 2002 polythene bag ban is widely acknowledged to have failed due to poor enforcement, with plastic bags still ubiquitous across markets.
 
-### 3. Against Wins
+### 3. Transit Feasibility
 **Topic:** Dhaka should transition to fully electric public transport within 5 years
 
 **Argument FOR (intentionally weaker):**
