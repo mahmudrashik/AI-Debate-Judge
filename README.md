@@ -1,6 +1,6 @@
-# Causal XAI Debate Judge
+# DebateLens
 
-A production-ready **8-agent AI system** that analyzes debate arguments using causal reasoning and explainable AI techniques. Built with FastAPI + LangChain + Groq LLaMA-3.3-70B on the backend and React + Vite on the frontend.
+**DebateLens** is a production-ready **8-agent AI debate analysis system** that evaluates opposing arguments with causal reasoning, fallacy detection, evidence scoring, explainable verdicts, and argument improvement. It is built with FastAPI + LangChain on the backend and React + Vite on the frontend, with Groq and Gemini provider support.
 
 ## 🏗️ Architecture
 
@@ -24,7 +24,7 @@ A production-ready **8-agent AI system** that analyzes debate arguments using ca
 ### Prerequisites
 - Python 3.11+
 - Node.js 18+
-- A free [Groq API key](https://console.groq.com)
+- A [Groq API key](https://console.groq.com) and/or a Gemini API key
 
 ### 1. Backend Setup
 
@@ -43,7 +43,7 @@ pip install -r requirements.txt
 # Set up environment
 copy .env.example .env       # Windows
 # cp .env.example .env       # Linux/Mac
-# Edit .env and add your GROQ_API_KEY
+# Edit .env and add GROQ_API_KEY and/or GEMINI_API_KEY
 
 # Start backend (from project root, not inside backend/)
 cd ..
@@ -74,9 +74,13 @@ Frontend will be available at **http://localhost:5173**
 
 | Variable | Description | Default |
 |---|---|---|
-| `GROQ_API_KEY` | Your Groq API key (required) | — |
+| `GROQ_API_KEY` | Groq API key | — |
 | `LLM_MODEL` | Groq model to use | `llama-3.3-70b-versatile` |
-| `GEMINI_API_KEY` | Optional Gemini key for comparison mode | — |
+| `GEMINI_API_KEY` | Gemini API key for Gemini or comparison mode | — |
+| `GEMINI_MODEL` | Primary Gemini model | `gemini-2.5-flash` |
+| `GEMINI_MAX_TOKENS` | Gemini output token budget | `8192` |
+| `GEMINI_FALLBACK_MODELS` | Ordered Gemini fallback list | `gemini-2.5-flash,gemini-2.5-flash-lite` |
+| `GEMINI_THINKING_LEVEL` | Optional Gemini 3 thinking level | `low` |
 | `VITE_API_BASE_URL` | Frontend API base URL, set in `frontend/.env` | `http://localhost:8005/api` |
 
 ## 📡 API Endpoints
@@ -93,40 +97,41 @@ Frontend will be available at **http://localhost:5173**
 
 ## ⏱️ Performance Notes
 
-- The full pipeline takes **45–90 seconds** (7 sequential LLM calls to Groq)
+- The full pipeline takes **45–90 seconds** depending on provider, prompt size, and API latency
 - Agent 8 (improvement) takes an additional **10–20 seconds**
 - The backend uses `asyncio.run_in_executor` so the event loop is never blocked
+- Gemini uses JSON response mode, a larger output budget, and fallback from `gemini-2.5-flash` to `gemini-2.5-flash-lite`
 
 ## 🎓 Sample Debates Included
 
-Here are some test cases you can copy-paste into the web application to test the full pipeline:
+The web UI includes exactly three sample debates. They are useful for checking different judging outcomes and argument-quality patterns:
 
 ### 1. AI in Exams
-**Topic:** Should AI tools be allowed in Bangladeshi university exams?
+**Topic:** AI tools should be allowed in university exams in Bangladesh
 
 **Argument FOR:**
-> AI is a tool just like calculators or search engines were decades ago. Banning it only creates a gap between academia and the real world, where AI is already actively used across every industry. By allowing AI in exams, universities can shift away from testing rote memorization and instead test higher-order thinking skills. Exams can be redesigned to evaluate critical analysis, complex problem-solving, and the student's ability to verify and refine AI-generated answers. Embracing this technology prepares students for the modern workforce rather than holding them back in outdated assessment methods.
+> Allowing AI tools in university exams in Bangladesh would significantly enhance the quality of student output and better prepare graduates for the modern workforce. Research from MIT and Stanford shows that students who use AI assistance produce work that is 40% more comprehensive and demonstrates higher-order thinking. In Bangladesh's rapidly digitalizing economy, where technology companies like BJIT, DataSoft, and Pathao are growing rapidly, graduates who are comfortable using AI tools will have a decisive competitive advantage. Furthermore, AI tools level the playing field—students from rural areas with less access to premium coaching centers can now access the same knowledge as their urban counterparts. The purpose of university education is not to test memorization but to evaluate problem-solving ability, analytical thinking, and the capacity to leverage available resources effectively. Banning AI in exams creates an artificial environment that does not reflect real professional settings. Countries like Finland and Singapore already allow AI-assisted examinations with great success, showing measurable improvements in graduate employability.
 
 **Argument AGAINST:**
-> Allowing AI in university exams fundamentally undermines academic integrity and damages the genuine learning process. It creates an unfair disparity between students who can afford premium AI models and those from lower socioeconomic backgrounds who cannot. Furthermore, if students rely on AI to generate their exam answers, university degrees will lose their credibility in the job market. It will become impossible for employers to distinguish between a student's actual competence and the capabilities of their AI assistant, ultimately devaluing the entire higher education system in Bangladesh.
+> Permitting AI tools in university examinations fundamentally undermines the core purpose of academic assessment in Bangladesh. Exams are designed to measure individual understanding, critical thinking, and the depth of knowledge a student has genuinely acquired through study and effort. When AI tools are allowed, it becomes impossible to distinguish between a student's own intellectual capability and the machine's output, rendering grades meaningless. This is particularly dangerous in high-stakes professional fields like medicine, engineering, and law, where practitioners must think independently in emergencies. Bangladesh's educational institutions already face credibility challenges internationally; allowing AI in exams would further devalue Bangladeshi degrees. Moreover, economically disadvantaged students who cannot afford premium AI subscriptions would be systematically disadvantaged. Studies from the University of Dhaka indicate that over 60% of students report reduced motivation to deeply learn material when AI shortcuts are available.
 
 ### 2. Plastic Ban
-**Topic:** Should Bangladesh ban single-use plastics?
+**Topic:** Bangladesh should implement a complete ban on single-use plastics
 
-**Argument FOR (Weak - Contains Fallacies):**
-> Plastics are bad for the environment and cause pollution everywhere. We need to ban them right now to save the rivers and make our streets cleaner. Many European countries have already banned them, so Bangladesh must do it immediately as well. If we don't ban them today, the entire country will be completely covered in garbage by next year.
+**Argument FOR:**
+> Bangladesh must implement an immediate and comprehensive ban on single-use plastics to protect its rivers, coastal ecosystems, and public health. The Buriganga, Turag, and Shitalakhya rivers are among the most polluted in the world, with plastic waste being a primary contributor. The Bangladesh River Research Institute documented over 200,000 tonnes of plastic entering waterways annually, directly causing fish mortality rates to increase by 35% over the past decade. Single-use plastics also clog drainage systems, directly worsening urban flooding in Dhaka during monsoon season. Bangladesh was the first country in the world to ban thin polythene bags in 2002, demonstrating the political will to act decisively. Jute, Bangladesh's golden fiber, provides an economically superior and already-established alternative for packaging needs.
 
-**Argument AGAINST (Strong - Well Reasoned):**
-> While environmental concerns are valid, an immediate, total ban on single-use plastics in Bangladesh would cause severe economic disruption. The plastic manufacturing sector employs over a million people, and a sudden ban would lead to massive job losses. Furthermore, affordable alternatives like biodegradable packaging are currently too expensive for the average consumer, which would drive up daily living costs and disproportionately affect low-income families. A phased transition focusing on improving recycling infrastructure and subsidizing eco-friendly alternatives is a much more pragmatic and economically viable approach than an abrupt ban.
+**Argument AGAINST:**
+> A complete ban on single-use plastics in Bangladesh would create severe economic and social disruptions the country is not equipped to handle. Bangladesh's small-scale plastic manufacturing sector employs approximately 2 million workers, predominantly from low-income backgrounds. An abrupt ban without adequate transition and economic safety nets would result in mass unemployment. The practical alternatives—biodegradable packaging, jute, glass—are 3 to 5 times more expensive, inaccessible to most Bangladeshi consumers. Furthermore, the cold chain and food safety infrastructure relies heavily on plastic packaging to prevent contamination. The 2002 polythene bag ban is widely acknowledged to have failed due to poor enforcement, with plastic bags still ubiquitous across markets.
 
-### 3. Electric Transit
-**Topic:** Should Dhaka transition to electric public transport?
+### 3. Transit Feasibility
+**Topic:** Dhaka should transition to fully electric public transport within 5 years
 
-**Argument FOR (Strong - Well Reasoned):**
-> Transitioning Dhaka's public transport to electric vehicles (EVs) is a public health and environmental imperative. Dhaka consistently ranks among cities with the worst air quality globally, largely due to fossil-fuel vehicular emissions. Electric buses emit zero tailpipe pollutants, which would drastically reduce respiratory diseases among residents. Although the initial infrastructure and vehicle capital costs are high, the long-term operational savings on imported fossil fuels and the significant reduction in national healthcare costs make this transition economically beneficial over a 10-year horizon.
+**Argument FOR (intentionally weaker):**
+> Dhaka should switch all public transport to electric vehicles within five years because electric buses are cleaner and modern. Other cities have started using electric buses, so Dhaka should do the same quickly. Air pollution is a serious problem, and electric transport would help reduce smoke from diesel buses. The city already has some experience with electric trains through the Metrorail, which shows that people are willing to use modern transport. If the government commits to the change, the city can become greener and more advanced. A fast transition would also show that Bangladesh is serious about climate action and technological progress.
 
-**Argument AGAINST (Weak - Contains Fallacies):**
-> Electric buses are just a trendy Western concept that won't work here. We already have load shedding, so if we plug in buses, the whole city will go dark forever. Besides, current bus drivers will probably lose their jobs because electric buses are too complicated to drive, and everyone knows that massive lithium batteries catch fire all the time, making them a huge public danger.
+**Argument AGAINST (designed to win):**
+> A five-year full transition to electric public transport in Dhaka is not realistic because the proposal ignores infrastructure, financing, grid capacity, and workforce disruption. Electric buses require reliable charging depots, upgraded distribution lines, spare-parts supply chains, trained mechanics, and route-level energy planning; Dhaka does not currently have those systems at the scale needed for thousands of vehicles. The upfront cost would also be extremely high: even a 5,000-bus replacement program could require more than $1 billion before accounting for charging infrastructure, land acquisition, battery replacement, and maintenance contracts. Bangladesh's power grid still faces peak-load pressure, so adding large overnight bus-charging demand without phased grid upgrades could shift pollution and reliability problems rather than solve them. A more defensible policy is a phased 10- to 15-year transition that starts with high-ridership corridors, depot pilots, grid upgrades, domestic technician training, and targeted subsidies. That approach captures environmental benefits while reducing fiscal risk, service disruption, and harm to workers in the existing bus and CNG transport ecosystem.
 
 ## 📁 Project Structure
 
@@ -147,6 +152,8 @@ Project/
 │   ├── services/
 │   │   ├── pipeline.py      # Pipeline orchestrator
 │   │   └── result_store.py  # In-memory session store
+│   ├── scripts/
+│   │   └── probe_gemini_models.py
 │   ├── config.py
 │   ├── main.py
 │   └── requirements.txt
@@ -155,7 +162,7 @@ Project/
 │   │   ├── components/      # React components
 │   │   ├── pages/           # InputPage, ResultsPage
 │   │   ├── App.jsx
-│   │   └── index.css        # Design system
+│   │   └── index.css        # Catppuccin Mocha + Airbnb-accent design system
 │   ├── package.json
 │   ├── .env                 # Custom API URL (optional)
 │   └── .env.example         # Template for API URL
