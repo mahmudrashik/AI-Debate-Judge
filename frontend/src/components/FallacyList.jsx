@@ -20,19 +20,19 @@ function FallacyCard({ f, index }) {
   return (
     <div style={{
       padding: '16px', borderRadius: 'var(--radius)',
-      background: `${meta.color}09`,
-      border: `1px solid ${meta.color}28`,
-      transition: 'border-color 0.2s ease',
+      background: 'var(--mocha-mantle)',
+      border: `1px solid var(--mocha-surface1)`,
+      transition: 'all 0.2s ease',
     }}
-      onMouseEnter={e => e.currentTarget.style.borderColor = `${meta.color}55`}
-      onMouseLeave={e => e.currentTarget.style.borderColor = `${meta.color}28`}
+      onMouseEnter={e => e.currentTarget.style.borderColor = meta.color}
+      onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--mocha-surface1)'}
     >
       {/* Header */}
       <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 12 }}>
         <div style={{
           width: 34, height: 34, borderRadius: 9, flexShrink: 0,
-          background: `${meta.color}18`,
-          border: `1px solid ${meta.color}30`,
+          background: 'var(--mocha-surface0)',
+          border: `1px solid var(--mocha-surface2)`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: 17,
         }}>
@@ -42,7 +42,7 @@ function FallacyCard({ f, index }) {
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <span style={{
               fontSize: 10, fontWeight: 800, color: meta.color,
-              background: `${meta.color}18`, padding: '3px 9px',
+              background: 'var(--mocha-surface1)', padding: '3px 9px',
               borderRadius: 99, letterSpacing: '0.06em',
             }}>
               {meta.label}
@@ -57,7 +57,7 @@ function FallacyCard({ f, index }) {
         <div style={{
           padding: '9px 12px',
           borderLeft: `3px solid ${meta.color}`,
-          background: `${meta.color}07`,
+          background: 'var(--mocha-surface0)',
           borderRadius: '0 8px 8px 0',
           marginBottom: 10,
         }}>

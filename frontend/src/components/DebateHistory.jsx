@@ -5,7 +5,7 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
 
-const API = 'http://localhost:8000/api'
+const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8005/api'
 
 const DOMAIN_COLORS = {
   education:   'var(--accent-light)',
@@ -53,7 +53,7 @@ export default function DebateHistory({ onClose, onSelect }) {
       try {
         const res = await axios.get(`${API}/history`, { timeout: 5000 })
         setHistory(res.data)
-      } catch (err) {
+      } catch {
         setError('Could not load history — is the backend running?')
         setHistory([])
       } finally {

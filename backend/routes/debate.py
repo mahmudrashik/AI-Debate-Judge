@@ -25,6 +25,11 @@ async def analyze_debate(request: DebateRequest):
     requests (e.g. health checks) remain responsive during processing.
     """
     try:
+        provider = request.provider.lower()
+        if provider not in ("groq", "gemini"):
+            raise HTTPException(status_code=400, detail="provider must be 'groq' or 'gemini'")
+        request.provider = provider
+
         # Generate a unique hash for the request
         hash_input = f"{request.topic}|{request.for_argument}|{request.against_argument}|{request.provider}"
         request_hash = hashlib.sha256(hash_input.encode('utf-8')).hexdigest()
@@ -40,6 +45,8 @@ async def analyze_debate(request: DebateRequest):
         result = await loop.run_in_executor(None, partial(run_pipeline, request))
         result_store.save_result(result, request_hash=request_hash)
         return {"id": result.id, "status": "completed", "cached": False}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -154,11 +161,18 @@ async def improve_argument(request: ImprovementRequest):
 @router.get("/health")
 async def health():
     """Health check endpoint — verify the API is running."""
-    from backend.config import GROQ_API_KEY, LLM_MODEL
+    from backend.config import GROQ_API_KEY, GEMINI_API_KEY, LLM_MODEL, GEMINI_MODEL
+    providers = {
+        "groq": bool(GROQ_API_KEY),
+        "gemini": bool(GEMINI_API_KEY),
+    }
     return {
         "status": "ok",
-        "service": "Causal XAI Debate Judge",
+        "service": "DebateLens",
         "agents": 8,
         "model": LLM_MODEL,
+        "gemini_model": GEMINI_MODEL,
         "groq_key_loaded": bool(GROQ_API_KEY),
+        "gemini_key_loaded": bool(GEMINI_API_KEY),
+        "providers": providers,
     }

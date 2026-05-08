@@ -5,13 +5,7 @@
 import { useState } from 'react'
 import axios from 'axios'
 
-const API = 'http://localhost:8000/api'
-
-const PRIORITY_STYLE = {
-  high:   { color: '#EF4444', bg: 'rgba(239,68,68,0.1)',   icon: '🔴', label: 'High' },
-  medium: { color: '#F59E0B', bg: 'rgba(245,158,11,0.1)',  icon: '🟡', label: 'Medium' },
-  low:    { color: '#10B981', bg: 'rgba(16,185,129,0.1)',   icon: '🟢', label: 'Low' },
-}
+const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8005/api'
 
 export default function ImprovementModal({ resultId, side, onClose }) {
   const [loading, setLoading] = useState(false)
@@ -73,7 +67,7 @@ export default function ImprovementModal({ resultId, side, onClose }) {
           padding: '20px 24px',
           borderBottom: '1px solid var(--border)',
           display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
-          background: 'rgba(108,99,255,0.06)',
+          background: 'rgba(79,70,229,0.04)',
           flexShrink: 0,
         }}>
           <div>
@@ -139,7 +133,7 @@ export default function ImprovementModal({ resultId, side, onClose }) {
               {/* Score boost banner */}
               <div style={{
                 padding: '16px 20px', borderRadius: 'var(--radius)',
-                background: 'linear-gradient(135deg, rgba(16,185,129,0.1), rgba(108,99,255,0.1))',
+                background: 'linear-gradient(135deg, rgba(16,185,129,0.1), rgba(79,70,229,0.06))',
                 border: '1px solid rgba(16,185,129,0.3)',
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
               }}>
@@ -175,7 +169,7 @@ export default function ImprovementModal({ resultId, side, onClose }) {
                     {result.changes_made.map((c, i) => (
                       <div key={i} style={{
                         padding: '10px 14px', borderRadius: 10,
-                        background: 'rgba(108,99,255,0.06)', border: '1px solid rgba(108,99,255,0.15)',
+                        background: 'rgba(79,70,229,0.04)', border: '1px solid rgba(79,70,229,0.12)',
                       }}>
                         <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--accent-light)', marginBottom: 4 }}>
                           {c.change}

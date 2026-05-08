@@ -81,7 +81,7 @@ export default function RadarChart({ forScore, againstScore }) {
           })
           return (
             <polygon key={r} points={pts.join(' ')}
-              fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={1} />
+              fill="none" stroke="rgba(0,0,0,0.06)" strokeWidth={1} />
           )
         })}
 
@@ -90,7 +90,7 @@ export default function RadarChart({ forScore, againstScore }) {
           const pt = polarToXY(0, r * R)
           return (
             <text key={`pct-${r}`} x={pt.x + 4} y={pt.y}
-              fontSize={8} fill="rgba(255,255,255,0.25)" dominantBaseline="middle">
+              fontSize={8} fill="rgba(0,0,0,0.25)" dominantBaseline="middle">
               {Math.round(r * 100)}%
             </text>
           )
@@ -99,7 +99,7 @@ export default function RadarChart({ forScore, againstScore }) {
         {/* Axis lines */}
         {axes.map((pt, i) => (
           <line key={i} x1={CX} y1={CY} x2={pt.x} y2={pt.y}
-            stroke="rgba(255,255,255,0.1)" strokeWidth={1} />
+            stroke="rgba(0,0,0,0.1)" strokeWidth={1} />
         ))}
 
         {/* AGAINST polygon */}
@@ -130,7 +130,7 @@ export default function RadarChart({ forScore, againstScore }) {
         })}
 
         {/* Center dot */}
-        <circle cx={CX} cy={CY} r={3} fill="rgba(255,255,255,0.3)" />
+        <circle cx={CX} cy={CY} r={3} fill="rgba(0,0,0,0.2)" />
 
         {/* Labels */}
         {labels.map(({ x, y, label }, i) => {
@@ -154,7 +154,7 @@ export default function RadarChart({ forScore, againstScore }) {
           return (
             <div key={c.key} style={{
               padding: '10px 12px', borderRadius: 10,
-              background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border)',
+              background: 'rgba(0,0,0,0.03)', border: '1px solid var(--border)',
             }}>
               <p style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 4 }}>{c.label}</p>
               <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>

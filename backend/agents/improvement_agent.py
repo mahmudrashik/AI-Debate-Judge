@@ -7,10 +7,10 @@ This is the novel "Agent 8" addition. Given an original argument, its weaknesses
   - A predicted new score range
 """
 import json
-import re
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from backend.config import get_llm
+from backend.agents.json_utils import parse_json_object
 
 SYSTEM_PROMPT = """You are a world-class debate coach who specializes in strengthening weak arguments.
 
@@ -93,12 +93,7 @@ def run_improvement_agent(
         "score_breakdown": json.dumps(score_breakdown),
     })
 
-    raw = raw.strip()
-    match = re.search(r'\{.*\}', raw, re.DOTALL)
-    if match:
-        raw = match.group(0)
-
-    data = json.loads(raw)
+    data = parse_json_object(raw)
     return {
         "improved_argument": data.get("improved_argument", ""),
         "changes_made": data.get("changes_made", []),

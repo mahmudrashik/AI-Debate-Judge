@@ -58,7 +58,6 @@ export default function ResultsPage({ result: resultsArray, onBack }) {
 
   const forWins        = explanation.winner === 'FOR'
   const winnerScore    = forWins ? for_score.score : against_score.score
-  const loserScore     = forWins ? against_score.score : for_score.score
   const totalFallacies = for_fallacies.length + against_fallacies.length
   const totalChains    = for_causal.causal_chains.length + against_causal.causal_chains.length
   const domainIcon     = DOMAIN_ICON[topic_context.domain] || '🌐'
@@ -81,8 +80,9 @@ export default function ResultsPage({ result: resultsArray, onBack }) {
       <header style={{
         padding: '14px 40px',
         borderBottom: '1px solid var(--border)',
-        background: 'rgba(8,10,18,0.92)',
-        backdropFilter: 'blur(20px)',
+        background: 'var(--glass)',
+        backdropFilter: 'blur(18px)',
+        boxShadow: 'var(--shadow-glass)',
         display: 'flex', alignItems: 'center', gap: 16,
         position: 'sticky', top: 0, zIndex: 50,
       }}>
@@ -104,8 +104,8 @@ export default function ResultsPage({ result: resultsArray, onBack }) {
       {isComparison && (
         <div style={{
           padding: '16px 40px',
-          background: 'rgba(108,99,255,0.06)',
-          borderBottom: '1px solid rgba(108,99,255,0.2)',
+          background: 'var(--soft-cloud)',
+          borderBottom: '1px solid var(--hairline)',
           display: 'flex', gap: 20, alignItems: 'center', justifyContent: 'center',
           animation: 'fadeInUp 0.4s ease'
         }}>
@@ -120,12 +120,12 @@ export default function ResultsPage({ result: resultsArray, onBack }) {
                 borderRadius: 99,
                 fontWeight: modelIdx === i ? 800 : 600,
                 border: modelIdx === i ? 'none' : '1px solid var(--border-accent)',
-                boxShadow: modelIdx === i ? '0 4px 12px rgba(108,99,255,0.4)' : 'none',
+                boxShadow: modelIdx === i ? '0 10px 24px var(--rausch-glow)' : 'none',
                 transform: modelIdx === i ? 'scale(1.05)' : 'scale(1)',
                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
               }}
             >
-              {r.provider === 'groq' ? '🦙 Groq (LLaMA-3)' : '✨ Gemini (1.5 Pro)'}
+              {r.provider === 'groq' ? '🦙 Groq (LLaMA-3)' : '✨ Gemini Model'}
             </button>
           ))}
         </div>
@@ -135,8 +135,8 @@ export default function ResultsPage({ result: resultsArray, onBack }) {
       <div style={{
         padding: '40px 40px 32px',
         background: forWins
-          ? 'linear-gradient(160deg, rgba(16,185,129,0.1) 0%, rgba(16,185,129,0.03) 100%)'
-          : 'linear-gradient(160deg, rgba(239,68,68,0.1) 0%, rgba(239,68,68,0.03) 100%)',
+          ? 'linear-gradient(160deg, var(--success-tint) 0%, transparent 100%)'
+          : 'linear-gradient(160deg, var(--danger-tint) 0%, transparent 100%)',
         borderBottom: '1px solid var(--border)',
         position: 'relative', overflow: 'hidden',
         animation: 'fadeInUp 0.6s ease',
@@ -145,7 +145,7 @@ export default function ResultsPage({ result: resultsArray, onBack }) {
         <div style={{
           position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)',
           width: 500, height: 200,
-          background: `radial-gradient(ellipse, ${forWins ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)'} 0%, transparent 70%)`,
+          background: `radial-gradient(ellipse, ${forWins ? 'var(--success-tint)' : 'var(--danger-tint)'} 0%, transparent 70%)`,
           pointerEvents: 'none',
         }} />
 
@@ -156,7 +156,7 @@ export default function ResultsPage({ result: resultsArray, onBack }) {
           <div style={{ marginBottom: 12 }}>
             <h2 style={{ fontSize: 'clamp(28px,4vw,48px)', fontWeight: 900, letterSpacing: '-0.02em', lineHeight: 1.1 }}>
               <span style={{ color: winnerColor }}>
-                {forWins ? '✅ FOR' : '❌ AGAINST'}
+                <span style={{ fontSize: '0.8em' }}>{forWins ? '✅' : '❌'}</span> {forWins ? 'FOR' : 'AGAINST'}
               </span>
               {' '}wins with{' '}
               <span className="gradient-text-gold">{winnerScore}/100</span>
@@ -172,14 +172,14 @@ export default function ResultsPage({ result: resultsArray, onBack }) {
               <span style={{ color: 'var(--success)' }}>FOR: {for_score.score}</span>
               <span style={{ color: 'var(--danger)' }}>AGAINST: {against_score.score}</span>
             </div>
-            <div style={{ height: 12, borderRadius: 99, background: 'rgba(239,68,68,0.25)', overflow: 'hidden', position: 'relative' }}>
+            <div style={{ height: 12, borderRadius: 99, background: 'var(--mocha-surface1)', overflow: 'hidden', position: 'relative' }}>
               <div style={{
                 height: '100%',
                 width: `${(for_score.score / (for_score.score + against_score.score)) * 100}%`,
-                background: 'linear-gradient(90deg, #059669, var(--success))',
+                background: 'linear-gradient(90deg, var(--mocha-teal), var(--success))',
                 borderRadius: 99,
                 transition: 'width 1.4s cubic-bezier(0.4,0,0.2,1)',
-                boxShadow: '0 0 12px rgba(16,185,129,0.5)',
+                boxShadow: '0 0 14px rgba(166, 227, 161, 0.32)',
               }} />
             </div>
           </div>
@@ -207,7 +207,7 @@ export default function ResultsPage({ result: resultsArray, onBack }) {
       {/* ── Agent 8 Quick-Action Bar ──────────────── */}
       <div style={{
         padding: '14px 40px',
-        background: 'rgba(108,99,255,0.04)',
+        background: 'var(--soft-cloud)',
         borderBottom: '1px solid var(--border)',
         display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap',
       }}>
@@ -230,9 +230,9 @@ export default function ResultsPage({ result: resultsArray, onBack }) {
       {/* ── Sticky Tab Bar ───────────────────────── */}
       <div style={{
         padding: '12px 40px 0',
-        background: 'rgba(8,10,18,0.88)',
+        background: 'var(--glass)',
         borderBottom: '1px solid var(--border)',
-        position: 'sticky', top: 57, zIndex: 40,
+        position: 'sticky', top: 72, zIndex: 40,
         backdropFilter: 'blur(16px)',
       }}>
         <div className="tabs">
@@ -407,8 +407,8 @@ export default function ResultsPage({ result: resultsArray, onBack }) {
           <div className="tab-panel" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             {/* Counterfactual callout */}
             <div className="card" style={{
-              background: 'linear-gradient(135deg, rgba(108,99,255,0.08), rgba(168,85,247,0.06))',
-              borderColor: 'rgba(108,99,255,0.3)',
+              background: 'linear-gradient(135deg, var(--accent-glow), transparent)',
+              borderColor: 'var(--mocha-surface2)',
             }}>
               <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
                 <span style={{ fontSize: 32, flexShrink: 0 }}>🔮</span>
@@ -423,8 +423,8 @@ export default function ResultsPage({ result: resultsArray, onBack }) {
 
             {/* Agent 8 CTA */}
             <div className="card" style={{
-              background: 'linear-gradient(135deg, rgba(16,185,129,0.08), rgba(108,99,255,0.06))',
-              borderColor: 'rgba(16,185,129,0.25)',
+              background: 'linear-gradient(135deg, var(--success-tint), var(--accent-glow))',
+              borderColor: 'var(--mocha-surface2)',
               display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap',
             }}>
               <div style={{ flex: 1, minWidth: 200 }}>
@@ -452,8 +452,8 @@ export default function ResultsPage({ result: resultsArray, onBack }) {
           <div className="tab-panel" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             {/* AI Confidence Meter */}
             <div className="card fade-in-up" style={{
-              background: 'linear-gradient(135deg, rgba(108,99,255,0.08), rgba(6,182,212,0.06))',
-              borderColor: 'rgba(108,99,255,0.25)',
+              background: 'linear-gradient(135deg, var(--accent-glow), var(--mocha-surface0))',
+              borderColor: 'var(--mocha-surface2)',
             }}>
               <div style={{ display: 'flex', gap: 20, alignItems: 'center', flexWrap: 'wrap' }}>
                 <div style={{
@@ -464,7 +464,7 @@ export default function ResultsPage({ result: resultsArray, onBack }) {
                 }}>
                   <div style={{
                     width: 80, height: 80, borderRadius: '50%',
-                    background: 'var(--bg-card)',
+                    background: 'var(--mocha-surface0)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     flexDirection: 'column',
                   }}>
@@ -535,15 +535,15 @@ export default function ResultsPage({ result: resultsArray, onBack }) {
                 <div className="divider" />
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
-                  <div style={{ textAlign: 'center', padding: '12px', borderRadius: 'var(--radius)', background: 'rgba(255,255,255,0.03)' }}>
+                  <div style={{ textAlign: 'center', padding: '12px', borderRadius: 'var(--radius)', background: 'var(--mocha-mantle)', border: '1px solid var(--border)' }}>
                     <p style={{ fontSize: 20, fontWeight: 800, color: 'var(--accent-light)' }}>7</p>
                     <p style={{ fontSize: 10, color: 'var(--text-muted)' }}>Active Agents</p>
                   </div>
-                  <div style={{ textAlign: 'center', padding: '12px', borderRadius: 'var(--radius)', background: 'rgba(255,255,255,0.03)' }}>
+                  <div style={{ textAlign: 'center', padding: '12px', borderRadius: 'var(--radius)', background: 'var(--mocha-mantle)', border: '1px solid var(--border)' }}>
                     <p style={{ fontSize: 20, fontWeight: 800, color: 'var(--cyan)' }}>{pipeline_metadata.provider_used || 'groq'}</p>
                     <p style={{ fontSize: 10, color: 'var(--text-muted)' }}>Model Provider</p>
                   </div>
-                  <div style={{ textAlign: 'center', padding: '12px', borderRadius: 'var(--radius)', background: 'rgba(255,255,255,0.03)' }}>
+                  <div style={{ textAlign: 'center', padding: '12px', borderRadius: 'var(--radius)', background: 'var(--mocha-mantle)', border: '1px solid var(--border)' }}>
                     <p style={{ fontSize: 20, fontWeight: 800, color: 'var(--success)' }}>{pipeline_metadata.pipeline_version || '2.1.0'}</p>
                     <p style={{ fontSize: 10, color: 'var(--text-muted)' }}>Pipeline Version</p>
                   </div>
@@ -555,15 +555,15 @@ export default function ResultsPage({ result: resultsArray, onBack }) {
             <div className="card fade-in-up">
               <h3 style={{ fontWeight: 800, fontSize: 15, marginBottom: 16 }}>📐 Score Margin Analysis</h3>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
-                <div style={{ textAlign: 'center', padding: 16, borderRadius: 'var(--radius)', background: 'rgba(108,99,255,0.06)', border: '1px solid rgba(108,99,255,0.15)' }}>
+                <div style={{ textAlign: 'center', padding: 16, borderRadius: 'var(--radius)', background: 'var(--mocha-mantle)', border: '1px solid var(--mocha-surface2)' }}>
                   <p style={{ fontSize: 28, fontWeight: 900, color: 'var(--accent-light)' }}>{Math.abs(for_score.score - against_score.score)}</p>
                   <p style={{ fontSize: 11, color: 'var(--text-muted)' }}>Point Margin</p>
                 </div>
-                <div style={{ textAlign: 'center', padding: 16, borderRadius: 'var(--radius)', background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.15)' }}>
+                <div style={{ textAlign: 'center', padding: 16, borderRadius: 'var(--radius)', background: 'var(--mocha-mantle)', border: '1px solid var(--success-border)' }}>
                   <p style={{ fontSize: 28, fontWeight: 900, color: 'var(--success)' }}>{Math.round((for_score.score / (for_score.score + against_score.score)) * 100)}%</p>
                   <p style={{ fontSize: 11, color: 'var(--text-muted)' }}>FOR Share</p>
                 </div>
-                <div style={{ textAlign: 'center', padding: 16, borderRadius: 'var(--radius)', background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.15)' }}>
+                <div style={{ textAlign: 'center', padding: 16, borderRadius: 'var(--radius)', background: 'var(--mocha-mantle)', border: '1px solid var(--danger-border)' }}>
                   <p style={{ fontSize: 28, fontWeight: 900, color: 'var(--danger)' }}>{Math.round((against_score.score / (for_score.score + against_score.score)) * 100)}%</p>
                   <p style={{ fontSize: 11, color: 'var(--text-muted)' }}>AGAINST Share</p>
                 </div>

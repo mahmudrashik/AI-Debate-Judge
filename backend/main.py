@@ -9,30 +9,35 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from backend.routes.debate import router
-from backend.config import GROQ_API_KEY
+from backend.config import GROQ_API_KEY, GEMINI_API_KEY, LLM_MODEL, GEMINI_MODEL
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # ── Startup validation ────────────────────────────────────────────────────
-    if not GROQ_API_KEY:
+    if not GROQ_API_KEY and not GEMINI_API_KEY:
         raise RuntimeError(
-            "GROQ_API_KEY is missing. Add it to your .env file and restart the server."
+            "No LLM API key is configured. Add GROQ_API_KEY or GEMINI_API_KEY to your .env file and restart the server."
         )
-    print("[OK] Causal XAI Debate Judge - 8-Agent Pipeline Ready")
-    print(f"[OK] Groq API key loaded ({GROQ_API_KEY[:8]}...)")
-    print("[OK] Backend running at http://localhost:8000")
-    print("[OK] API docs available at http://localhost:8000/docs")
+    print("[OK] DebateLens - 8-Agent Pipeline Ready")
+    if GROQ_API_KEY:
+        print(f"[OK] Groq API key loaded ({GROQ_API_KEY[:8]}...)")
+        print(f"[OK] Groq model: {LLM_MODEL}")
+    if GEMINI_API_KEY:
+        print(f"[OK] Gemini API key loaded ({GEMINI_API_KEY[:8]}...)")
+        print(f"[OK] Gemini model: {GEMINI_MODEL}")
+    print("[OK] Backend started. Use the Uvicorn URL shown above.")
+    print("[OK] API docs available at /docs")
     yield
     # ── Shutdown ──────────────────────────────────────────────────────────────
-    print("[--] Shutting down Causal XAI Debate Judge.")
+    print("[--] Shutting down DebateLens.")
 
 
 app = FastAPI(
-    title="Causal XAI Debate Judge",
+    title="DebateLens",
     description=(
         "A multi-agent AI system for causal explainable debate analysis. "
-        "Runs an 8-agent LangChain pipeline powered by Groq / LLaMA-3.3-70B. "
+        "Runs an 8-agent LangChain pipeline powered by Groq or Gemini. "
         "Analyzes arguments, detects fallacies, maps causal chains, and "
         "provides actionable improvement suggestions."
     ),
@@ -62,10 +67,11 @@ app.include_router(router)
 @app.get("/")
 async def root():
     return {
-        "message": "Causal XAI Debate Judge API v2.0",
+        "message": "DebateLens API v2.0",
         "status": "online",
         "agents": 8,
-        "model": "llama-3.3-70b-versatile",
+        "model": LLM_MODEL,
+        "gemini_model": GEMINI_MODEL,
         "docs": "/docs",
         "health": "/api/health",
         "endpoints": [
