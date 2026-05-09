@@ -30,10 +30,10 @@ async def analyze_debate(request: DebateRequest):
         request_hash = hashlib.sha256(hash_input.encode('utf-8')).hexdigest()
 
         # Check if we already have this exact debate in the cache
-        cached_id = result_store.get_cached_result_id(request_hash)
-        if cached_id:
-            print(f"[API] Cache hit! Returning cached result ID: {cached_id}")
-            return {"id": cached_id, "status": "completed", "cached": True}
+        # cached_id = result_store.get_cached_result_id(request_hash)
+        # if cached_id:
+        #     print(f"[API] Cache hit! Returning cached result ID: {cached_id}")
+        #     return {"id": cached_id, "status": "completed", "cached": True}
 
         print(f"[API] Cache miss. Running pipeline for new request...")
         loop = asyncio.get_event_loop()
@@ -58,6 +58,14 @@ async def get_history():
     """Return a summary list of all past debate analyses (for the session)."""
     all_results = result_store.list_results_summary()
     return all_results
+
+
+@router.delete("/history", response_model=dict)
+async def clear_history():
+    """Permanently delete ALL stored debate results and the request cache."""
+    deleted = result_store.clear_all()
+    print(f"[API] History cleared — {deleted} result(s) removed.")
+    return {"status": "cleared", "deleted_count": deleted}
 
 
 @router.get("/causal-graph/{result_id}/for", response_model=CausalGraph)
@@ -154,11 +162,12 @@ async def improve_argument(request: ImprovementRequest):
 @router.get("/health")
 async def health():
     """Health check endpoint — verify the API is running."""
-    from backend.config import GROQ_API_KEY, LLM_MODEL
+    from backend.config import GROQ_API_KEY, LLM_MODEL, SECONDARY_MODEL
     return {
         "status": "ok",
         "service": "Causal XAI Debate Judge",
         "agents": 8,
-        "model": LLM_MODEL,
+        "primary_model": LLM_MODEL,
+        "secondary_model": SECONDARY_MODEL,
         "groq_key_loaded": bool(GROQ_API_KEY),
     }

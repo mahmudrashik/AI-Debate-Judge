@@ -32,7 +32,7 @@ app = FastAPI(
     title="Causal XAI Debate Judge",
     description=(
         "A multi-agent AI system for causal explainable debate analysis. "
-        "Runs an 8-agent LangChain pipeline powered by Groq / LLaMA-3.3-70B. "
+        "Runs an 8-agent LangChain pipeline powered by Groq. "
         "Analyzes arguments, detects fallacies, maps causal chains, and "
         "provides actionable improvement suggestions."
     ),
@@ -65,7 +65,10 @@ async def root():
         "message": "Causal XAI Debate Judge API v2.0",
         "status": "online",
         "agents": 8,
-        "model": "llama-3.3-70b-versatile",
+        "models": {
+            "primary": "llama-3.1-8b-instant (Groq)",
+            "secondary": "llama-3.3-70b-versatile (Groq)",
+        },
         "docs": "/docs",
         "health": "/api/health",
         "endpoints": [

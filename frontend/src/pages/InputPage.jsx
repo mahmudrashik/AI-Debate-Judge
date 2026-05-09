@@ -64,7 +64,8 @@ export default function InputPage({ onSubmit, onHistoryOpen }) {
     if (!loading) { setStep(-1); setPct(0); return }
     let i = 0
     // We have 7 active agents (Agent 8 is on-demand), so animate steps 0-6
-    const STEP_MS = 7000
+    // Groq is incredibly fast, so we use 1200ms instead of 7000ms
+    const STEP_MS = 1200
     const tick = setInterval(() => {
       i++
       if (i < 7) {
@@ -99,13 +100,21 @@ export default function InputPage({ onSubmit, onHistoryOpen }) {
     try {
       if (provider === 'both') {
         const p1 = axios.post(`${API}/analyze-debate`, { topic, for_argument: forArg, against_argument: againstArg, provider: 'groq' })
-        const p2 = axios.post(`${API}/analyze-debate`, { topic, for_argument: forArg, against_argument: againstArg, provider: 'gemini' })
+        const p2 = axios.post(`${API}/analyze-debate`, { topic, for_argument: forArg, against_argument: againstArg, provider: 'llama33' })
         const [res1, res2] = await Promise.all([p1, p2])
         setPct(98)
         const [full1, full2] = await Promise.all([
           axios.get(`${API}/results/${res1.data.id}`),
           axios.get(`${API}/results/${res2.data.id}`)
         ])
+        
+        // Fast-forward animation to visually complete remaining steps if API was faster than animation
+        for (let s = 1; s <= 7; s++) {
+          setStep(prev => Math.max(prev, s - 1))
+          setPct(Math.round((s / 7) * 98))
+          await new Promise(r => setTimeout(r, 120))
+        }
+        
         setPct(100)
         await new Promise(r => setTimeout(r, 400))
         if (addToast && (res1.data.cached || res2.data.cached)) addToast('⚡ Retrieved instantly from cache!', 'success');
@@ -119,6 +128,14 @@ export default function InputPage({ onSubmit, onHistoryOpen }) {
         
         setPct(98)
         const full = await axios.get(`${API}/results/${id}`)
+        
+        // Fast-forward animation to visually complete remaining steps
+        for (let s = 1; s <= 7; s++) {
+          setStep(prev => Math.max(prev, s - 1))
+          setPct(Math.round((s / 7) * 98))
+          await new Promise(r => setTimeout(r, 120))
+        }
+        
         setPct(100)
         await new Promise(r => setTimeout(r, 400))
         onSubmit([full.data])
@@ -152,7 +169,7 @@ export default function InputPage({ onSubmit, onHistoryOpen }) {
         }}>⚖️</div>
         <div>
           <div style={{ fontSize: 15, fontWeight: 800, letterSpacing: '-0.01em' }}>Causal XAI Debate Judge</div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', letterSpacing: '0.02em' }}>8-Agent Pipeline · Groq LLaMA-3.3-70B · Explainable AI</div>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', letterSpacing: '0.02em' }}>8-Agent Pipeline · Groq LLaMA 3.1 & LLaMA 3.3 · Explainable AI</div>
         </div>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center' }}>
           <span className="badge badge-accent">8 Agents</span>
@@ -275,8 +292,8 @@ export default function InputPage({ onSubmit, onHistoryOpen }) {
               disabled={loading}
               style={{ flex: 1, padding: '12px 16px', borderRadius: 'var(--radius)', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-accent)', color: '#fff', fontSize: 14, minWidth: 200 }}
             >
-              <option value="groq" style={{background: '#1a1b26'}}>🦙 Groq (LLaMA-3.3-70B)</option>
-              <option value="gemini" style={{background: '#1a1b26'}}>✨ Google Gemini (1.5 Pro)</option>
+              <option value="groq" style={{background: '#1a1b26'}}>🦙 Groq — LLaMA 3.1 (8B)</option>
+              <option value="llama33" style={{background: '#1a1b26'}}>💎 Groq — LLaMA 3.3 (70B)</option>
               <option value="both" style={{background: '#1a1b26'}}>⚖️ Compare Both (Side-by-Side)</option>
             </select>
           </div>
@@ -344,7 +361,7 @@ export default function InputPage({ onSubmit, onHistoryOpen }) {
                 <div>
                   <p style={{ fontWeight: 700, fontSize: 15 }}>Running 8-Agent Pipeline</p>
                   <p style={{ color: 'var(--text-muted)', fontSize: 12, marginTop: 2 }}>
-                    This takes 45–90 seconds — each agent calls Groq LLaMA-3.3-70B
+                    Groq is extremely fast — 7 agents complete in ~8–12 seconds
                   </p>
                 </div>
                 <div style={{ marginLeft: 'auto', textAlign: 'right' }}>

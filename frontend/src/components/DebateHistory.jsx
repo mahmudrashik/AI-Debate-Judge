@@ -43,10 +43,12 @@ function formatDate(isoString) {
   }
 }
 
-export default function DebateHistory({ onClose, onSelect }) {
-  const [history, setHistory] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error,   setError]   = useState('')
+export default function DebateHistory({ onClose, onSelect, onClearAll }) {
+  const [history,      setHistory]      = useState([])
+  const [loading,      setLoading]      = useState(true)
+  const [error,        setError]        = useState('')
+  const [clearing,     setClearing]     = useState(false)
+  const [confirmClear, setConfirmClear] = useState(false)
 
   useEffect(() => {
     const fetchHistory = async () => {
@@ -72,6 +74,21 @@ export default function DebateHistory({ onClose, onSelect }) {
     }
   }
 
+  const handleClearAll = async () => {
+    setClearing(true)
+    setConfirmClear(false)
+    try {
+      await axios.delete(`${API}/history`)
+      setHistory([])
+      // Notify parent so it can reset its result state and navigate back to input
+      if (onClearAll) onClearAll()
+    } catch {
+      setError('Failed to clear history — is the backend running?')
+    } finally {
+      setClearing(false)
+    }
+  }
+
   return (
     <>
       <div className="drawer-overlay" onClick={onClose} />
@@ -92,11 +109,60 @@ export default function DebateHistory({ onClose, onSelect }) {
               {history.length > 0 ? `${history.length} debate${history.length > 1 ? 's' : ''} this session` : 'Current session results'}
             </p>
           </div>
-          <button className="btn btn-ghost" style={{ padding: '8px 12px', fontSize: 13 }} onClick={onClose}>✕</button>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            {history.length > 0 && !confirmClear && (
+              <button
+                id="clear-history-btn"
+                className="btn btn-ghost"
+                style={{ padding: '6px 12px', fontSize: 12, color: 'var(--danger)', borderColor: 'rgba(239,68,68,0.3)' }}
+                onClick={() => setConfirmClear(true)}
+                disabled={clearing}
+              >
+                {clearing ? '⏳' : '🗑️'} Clear All
+              </button>
+            )}
+            <button className="btn btn-ghost" style={{ padding: '8px 12px', fontSize: 13 }} onClick={onClose}>✕</button>
+          </div>
         </div>
 
         {/* Content */}
         <div style={{ flex: 1, padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 10, overflowY: 'auto' }}>
+
+          {/* Inline clear confirmation banner */}
+          {confirmClear && (
+            <div style={{
+              padding: '12px 16px', borderRadius: 'var(--radius)',
+              background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)',
+              display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0,
+            }}>
+              <span style={{ fontSize: 13, color: 'var(--danger)', flex: 1, fontWeight: 600 }}>
+                🗑️ Delete all {history.length} debate{history.length > 1 ? 's' : ''}? This cannot be undone.
+              </span>
+              <button
+                id="confirm-clear-yes"
+                onClick={handleClearAll}
+                style={{
+                  padding: '6px 14px', fontSize: 12, fontWeight: 700,
+                  background: 'var(--danger)', color: '#fff', border: 'none',
+                  borderRadius: 8, cursor: 'pointer', flexShrink: 0,
+                }}
+              >
+                Yes, Delete
+              </button>
+              <button
+                id="confirm-clear-no"
+                onClick={() => setConfirmClear(false)}
+                style={{
+                  padding: '6px 12px', fontSize: 12,
+                  background: 'transparent', color: 'var(--text-muted)',
+                  border: '1px solid var(--border)', borderRadius: 8, cursor: 'pointer', flexShrink: 0,
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          )}
+
           {loading && (
             <div style={{ textAlign: 'center', padding: 40 }}>
               <div className="spinner" style={{ margin: '0 auto 12px' }} />
@@ -202,7 +268,7 @@ export default function DebateHistory({ onClose, onSelect }) {
         {/* Footer */}
         <div style={{ padding: '14px 20px', borderTop: '1px solid var(--border)', textAlign: 'center', flexShrink: 0 }}>
           <p style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-            💾 History is stored in server memory during this session only.
+            💾 History is session-only. Use <strong>Clear All</strong> to permanently delete it.
           </p>
         </div>
       </div>

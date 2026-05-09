@@ -10,7 +10,7 @@ class DebateRequest(BaseModel):
     topic: str = Field(..., description="The debate topic / motion")
     for_argument: str = Field(..., description="The FOR side's argument text")
     against_argument: str = Field(..., description="The AGAINST side's argument text")
-    provider: str = Field(default="groq", description="LLM provider: groq or gemini")
+    provider: str = Field(default="groq", description="LLM provider: groq or llama33")
 
 
 # ──────────────────────────────────────────────

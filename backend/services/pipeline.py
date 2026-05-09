@@ -70,82 +70,103 @@ def run_pipeline(request: DebateRequest) -> DebateResult:
     pipeline_start = time.time()
     agent_timings = {}
 
-    # ── Agent 1: Topic Context ────────────────────────────────────────────────
-    print(f"[Pipeline] Agent 1: Topic Context — {result_id}")
+    model_label = "llama-3.3-70b-versatile (SECONDARY KEY)" if provider.lower() in ("llama33", "gemma2") else "llama-3.1-8b-instant (PRIMARY KEY)"
+    print(f"[Pipeline] ═══════════════════════════════════════════")
+    print(f"[Pipeline] START ── provider='{provider}' → {model_label}")
+    print(f"[Pipeline] run_id={result_id}")
+    print(f"[Pipeline] ═══════════════════════════════════════════")
+
+    # ── Agent 1: Topic Context ──────────────────────────────────────────────────
+    print(f"[Pipeline] ▶ Agent 1/7: Topic Context ── provider='{provider}'")
     t0 = time.time()
     try:
         topic_ctx = run_topic_agent(topic, for_arg, against_arg, provider=provider)
+        print(f"[Pipeline] ✓ Agent 1 done in {round(time.time()-t0, 2)}s")
     except Exception as exc:
-        print(f"[Pipeline] WARNING: Agent 1 failed: {exc}. Using fallback.")
+        print(f"[Pipeline] ✗ Agent 1 FAILED ({type(exc).__name__}): {exc}. Using fallback.")
         topic_ctx = _default_topic_ctx(topic)
     agent_timings['Agent 1: Topic Context'] = round(time.time() - t0, 2)
 
-    # ── Agent 2: Argument Extraction (both sides) ─────────────────────────────
-    print("[Pipeline] Agent 2: Argument Extraction")
+    # ── Agent 2: Argument Extraction (both sides) ─────────────────────────────────
+    print(f"[Pipeline] ▶ Agent 2/7: Argument Extraction ── provider='{provider}'")
     t0 = time.time()
     try:
         for_structure = run_extraction_agent(topic, "FOR", for_arg, provider=provider)
+        print(f"[Pipeline] ✓ Agent 2 (FOR) done")
     except Exception as exc:
-        print(f"[Pipeline] WARNING: Agent 2 (FOR) failed: {exc}. Using fallback.")
+        import traceback
+        with open("pipeline_errors.log", "a") as f:
+            f.write(f"Agent 2 (FOR) failed: {exc}\n{traceback.format_exc()}\n")
+        print(f"[Pipeline] ✗ Agent 2 (FOR) FAILED ({type(exc).__name__}): {exc}. Using fallback.")
         for_structure = _default_structure("FOR", for_arg)
     try:
         against_structure = run_extraction_agent(topic, "AGAINST", against_arg, provider=provider)
+        print(f"[Pipeline] ✓ Agent 2 (AGAINST) done")
     except Exception as exc:
-        print(f"[Pipeline] WARNING: Agent 2 (AGAINST) failed: {exc}. Using fallback.")
+        import traceback
+        with open("pipeline_errors.log", "a") as f:
+            f.write(f"Agent 2 (AGAINST) failed: {exc}\n{traceback.format_exc()}\n")
+        print(f"[Pipeline] ✗ Agent 2 (AGAINST) FAILED ({type(exc).__name__}): {exc}. Using fallback.")
         against_structure = _default_structure("AGAINST", against_arg)
     agent_timings['Agent 2: Extraction'] = round(time.time() - t0, 2)
 
-    # ── Agent 3: Causal Reasoning (both sides) ────────────────────────────────
-    print("[Pipeline] Agent 3: Causal Reasoning")
+    # ── Agent 3: Causal Reasoning (both sides) ────────────────────────────────────
+    print(f"[Pipeline] ▶ Agent 3/7: Causal Reasoning ── provider='{provider}'")
     t0 = time.time()
     try:
         for_causal, for_graph = run_causal_agent(
             topic, "FOR", for_arg, for_structure.reasons, for_structure.evidence, provider=provider
         )
+        print(f"[Pipeline] ✓ Agent 3 (FOR) done")
     except Exception as exc:
-        print(f"[Pipeline] WARNING: Agent 3 (FOR) failed: {exc}. Using fallback.")
+        print(f"[Pipeline] ✗ Agent 3 (FOR) FAILED ({type(exc).__name__}): {exc}. Using fallback.")
         for_causal, for_graph = _default_causal("FOR")
     try:
         against_causal, against_graph = run_causal_agent(
             topic, "AGAINST", against_arg, against_structure.reasons, against_structure.evidence, provider=provider
         )
+        print(f"[Pipeline] ✓ Agent 3 (AGAINST) done")
     except Exception as exc:
-        print(f"[Pipeline] WARNING: Agent 3 (AGAINST) failed: {exc}. Using fallback.")
+        print(f"[Pipeline] ✗ Agent 3 (AGAINST) FAILED ({type(exc).__name__}): {exc}. Using fallback.")
         against_causal, against_graph = _default_causal("AGAINST")
     agent_timings['Agent 3: Causal'] = round(time.time() - t0, 2)
 
-    # ── Agent 4: Fallacy Detection (both sides) ───────────────────────────────
-    print("[Pipeline] Agent 4: Fallacy Detection")
+    # ── Agent 4: Fallacy Detection (both sides) ──────────────────────────────────
+    print(f"[Pipeline] ▶ Agent 4/7: Fallacy Detection ── provider='{provider}'")
     t0 = time.time()
     try:
         for_fallacies = run_fallacy_agent(topic, "FOR", for_arg, provider=provider)
+        print(f"[Pipeline] ✓ Agent 4 (FOR) done")
     except Exception as exc:
-        print(f"[Pipeline] WARNING: Agent 4 (FOR) failed: {exc}. Using fallback.")
+        print(f"[Pipeline] ✗ Agent 4 (FOR) FAILED ({type(exc).__name__}): {exc}. Using fallback.")
         for_fallacies = []
     try:
         against_fallacies = run_fallacy_agent(topic, "AGAINST", against_arg, provider=provider)
+        print(f"[Pipeline] ✓ Agent 4 (AGAINST) done")
     except Exception as exc:
-        print(f"[Pipeline] WARNING: Agent 4 (AGAINST) failed: {exc}. Using fallback.")
+        print(f"[Pipeline] ✗ Agent 4 (AGAINST) FAILED ({type(exc).__name__}): {exc}. Using fallback.")
         against_fallacies = []
     agent_timings['Agent 4: Fallacy'] = round(time.time() - t0, 2)
 
-    # ── Agent 5: Evidence Quality (both sides) ────────────────────────────────
-    print("[Pipeline] Agent 5: Evidence Quality")
+    # ── Agent 5: Evidence Quality (both sides) ───────────────────────────────────
+    print(f"[Pipeline] ▶ Agent 5/7: Evidence Quality ── provider='{provider}'")
     t0 = time.time()
     try:
         for_evidence = run_evidence_agent(topic, "FOR", for_arg, for_structure.evidence, provider=provider)
+        print(f"[Pipeline] ✓ Agent 5 (FOR) done")
     except Exception as exc:
-        print(f"[Pipeline] WARNING: Agent 5 (FOR) failed: {exc}. Using fallback.")
+        print(f"[Pipeline] ✗ Agent 5 (FOR) FAILED ({type(exc).__name__}): {exc}. Using fallback.")
         for_evidence = _default_evidence("FOR")
     try:
         against_evidence = run_evidence_agent(topic, "AGAINST", against_arg, against_structure.evidence, provider=provider)
+        print(f"[Pipeline] ✓ Agent 5 (AGAINST) done")
     except Exception as exc:
-        print(f"[Pipeline] WARNING: Agent 5 (AGAINST) failed: {exc}. Using fallback.")
+        print(f"[Pipeline] ✗ Agent 5 (AGAINST) FAILED ({type(exc).__name__}): {exc}. Using fallback.")
         against_evidence = _default_evidence("AGAINST")
     agent_timings['Agent 5: Evidence'] = round(time.time() - t0, 2)
 
-    # ── Agent 6: Scoring (both sides) ─────────────────────────────────────────
-    print("[Pipeline] Agent 6: Scoring")
+    # ── Agent 6: Scoring (both sides) ─────────────────────────────────────────────
+    print(f"[Pipeline] ▶ Agent 6/7: Scoring ── provider='{provider}'")
     t0 = time.time()
     try:
         for_score = run_scoring_agent(
@@ -158,8 +179,9 @@ def run_pipeline(request: DebateRequest) -> DebateResult:
             fallacies=[f.model_dump() for f in for_fallacies],
             provider=provider
         )
+        print(f"[Pipeline] ✓ Agent 6 (FOR) done — score={for_score.score}")
     except Exception as exc:
-        print(f"[Pipeline] WARNING: Agent 6 (FOR) failed: {exc}. Using fallback.")
+        print(f"[Pipeline] ✗ Agent 6 (FOR) FAILED ({type(exc).__name__}): {exc}. Using fallback.")
         for_score = _default_score("FOR")
     try:
         against_score = run_scoring_agent(
@@ -172,13 +194,14 @@ def run_pipeline(request: DebateRequest) -> DebateResult:
             fallacies=[f.model_dump() for f in against_fallacies],
             provider=provider
         )
+        print(f"[Pipeline] ✓ Agent 6 (AGAINST) done — score={against_score.score}")
     except Exception as exc:
-        print(f"[Pipeline] WARNING: Agent 6 (AGAINST) failed: {exc}. Using fallback.")
+        print(f"[Pipeline] ✗ Agent 6 (AGAINST) FAILED ({type(exc).__name__}): {exc}. Using fallback.")
         against_score = _default_score("AGAINST")
     agent_timings['Agent 6: Scoring'] = round(time.time() - t0, 2)
 
-    # ── Agent 7: Explanation & Improvement ───────────────────────────────────
-    print("[Pipeline] Agent 7: Explanation")
+    # ── Agent 7: Explanation & Improvement ────────────────────────────────────
+    print(f"[Pipeline] ▶ Agent 7/7: Explanation ── provider='{provider}'")
     t0 = time.time()
     try:
         explanation = run_explanation_agent(
@@ -198,8 +221,9 @@ def run_pipeline(request: DebateRequest) -> DebateResult:
             against_evidence_quality=against_evidence.quality,
             provider=provider
         )
+        print(f"[Pipeline] ✓ Agent 7 done — winner={explanation.winner}")
     except Exception as exc:
-        print(f"[Pipeline] WARNING: Agent 7 failed: {exc}. Using fallback.")
+        print(f"[Pipeline] ✗ Agent 7 FAILED ({type(exc).__name__}): {exc}. Using fallback.")
         explanation = _default_explanation(for_score.score, against_score.score)
     agent_timings['Agent 7: Explanation'] = round(time.time() - t0, 2)
 
@@ -213,7 +237,9 @@ def run_pipeline(request: DebateRequest) -> DebateResult:
     )
 
     # ── Assemble Final Result ─────────────────────────────────────────────────
-    print(f"[Pipeline] DONE: Pipeline complete in {total_time}s -- {result_id}")
+    print(f"[Pipeline] ═══════════════════════════════════════════")
+    print(f"[Pipeline] DONE: {total_time}s | provider='{provider}' | winner={explanation.winner} | run_id={result_id}")
+    print(f"[Pipeline] ═══════════════════════════════════════════")
     return DebateResult(
         id=result_id,
         topic=topic,

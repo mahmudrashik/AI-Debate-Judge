@@ -125,7 +125,7 @@ export default function ResultsPage({ result: resultsArray, onBack }) {
                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
               }}
             >
-              {r.provider === 'groq' ? '🦙 Groq (LLaMA-3)' : '✨ Gemini (1.5 Pro)'}
+              {r.provider === 'groq' ? '🦙 Groq — LLaMA 3.1 (8B)' : '💎 Groq — LLaMA 3.3 (70B)'}
             </button>
           ))}
         </div>

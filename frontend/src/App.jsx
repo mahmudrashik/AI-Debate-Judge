@@ -26,12 +26,20 @@ export default function App() {
     setShowHistory(false)
   }
 
+  const handleClearAll = () => {
+    // After clearing backend history, reset local state and go back to input page
+    setResult(null)
+    setPage('input')
+    setShowHistory(false)
+  }
+
   return (
     <ToastProvider>
       {showHistory && (
         <DebateHistory
           onClose={() => setShowHistory(false)}
           onSelect={handleHistorySelect}
+          onClearAll={handleClearAll}
         />
       )}
       {page === 'results' && result ? (

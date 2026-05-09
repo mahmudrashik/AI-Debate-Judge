@@ -12,24 +12,48 @@ export default function ExportButton({ result }) {
     try {
       const htmlContent = generateReportHTML(result);
       const container = document.createElement('div');
-      // Use standard styling for the container, ensuring it's not hidden with display:none
-      container.style.cssText = 'position:fixed;left:-9999px;top:0;width:794px;background:#fff;z-index:-1;';
+      
+      // Position far below the visible viewport to prevent blank rendering
+      // while keeping it in the document flow for proper layout calculation.
+      container.style.cssText = 'position:absolute;left:0;top:200vh;width:794px;background:#fff;z-index:-1;padding:20px;';
       container.innerHTML = htmlContent;
       document.body.appendChild(container);
       
       // Allow fonts and layout to settle
-      await new Promise(r => setTimeout(r, 500));
+      await new Promise(r => setTimeout(r, 800));
 
+      // Capture using html2canvas directly
+      const canvas = await html2canvas(container, {
+        scale: 2, // High resolution
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff'
+      });
+
+      const imgData = canvas.toDataURL('image/jpeg', 0.98);
       const pdf = new jsPDF('p', 'pt', 'a4');
       
-      await pdf.html(container, {
-        margin: [30, 0, 30, 0], // Top, Right, Bottom, Left margins
-        autoPaging: 'text',
-        x: 0,
-        y: 0,
-        width: 595, // A4 width in pt
-        windowWidth: 794, // Matches the container width
-      });
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      
+      // Calculate image dimensions to fit A4 width
+      const imgWidth = pdfWidth;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+      let heightLeft = imgHeight;
+      let position = 0;
+      
+      // Add first page
+      pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pdfHeight;
+      
+      // Slice and add subsequent pages
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight; // Shift image up by the amount already rendered
+        pdf.addPage();
+        pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pdfHeight;
+      }
 
       pdf.save(`debate_analysis_${result.id.slice(0, 8)}.pdf`);
       document.body.removeChild(container);

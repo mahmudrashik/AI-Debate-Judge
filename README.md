@@ -1,6 +1,6 @@
 # Causal XAI Debate Judge
 
-A production-ready **8-agent AI system** that analyzes debate arguments using causal reasoning and explainable AI techniques. Built with FastAPI + LangChain + Groq LLaMA-3.3-70B on the backend and React + Vite on the frontend.
+A production-ready **8-agent AI system** that analyzes debate arguments using causal reasoning and explainable AI techniques. Built with FastAPI + LangChain + Groq (LLaMA 3.1 & LLaMA 3.3) on the backend and React + Vite on the frontend.
 
 ## 🏗️ Architecture
 
@@ -41,9 +41,11 @@ venv\Scripts\activate        # Windows
 pip install -r requirements.txt
 
 # Set up environment
-copy .env.example .env       # Windows
-# cp .env.example .env       # Linux/Mac
-# Edit .env and add your GROQ_API_KEY
+# Create a .env file and add your GROQ_API_KEY
+# .env should contain:
+# GROQ_API_KEY=your_key_here
+# LLM_MODEL=llama-3.1-8b-instant
+# SECONDARY_MODEL=llama-3.3-70b-versatile
 
 # Start backend (from project root, not inside backend/)
 cd ..
@@ -70,7 +72,8 @@ Frontend will be available at **http://localhost:5173**
 | Variable | Description | Default |
 |---|---|---|
 | `GROQ_API_KEY` | Your Groq API key (required) | — |
-| `LLM_MODEL` | Groq model to use | `llama-3.3-70b-versatile` |
+| `LLM_MODEL` | Primary Groq model | `llama-3.1-8b-instant` |
+| `SECONDARY_MODEL` | Secondary Groq model for comparison | `llama-3.3-70b-versatile` |
 
 ## 📡 API Endpoints
 
@@ -126,5 +129,5 @@ Project/
 │   │   └── index.css        # Design system
 │   └── package.json
 ├── .env                     # Your API key (not committed)
-└── .env.example             # Template
+└── README.md
 ```

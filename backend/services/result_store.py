@@ -24,6 +24,15 @@ def list_results() -> list[str]:
     return list(_store.keys())
 
 
+def clear_all() -> int:
+    """Permanently delete all stored results and the request cache.
+    Returns the number of results that were deleted."""
+    count = len(_store)
+    _store.clear()
+    _request_cache.clear()
+    return count
+
+
 def list_results_summary() -> list[dict]:
     """Return lightweight summaries for the debate history panel."""
     summaries = []
